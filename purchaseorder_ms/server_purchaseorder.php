@@ -30,13 +30,13 @@
 	 * you want to insert a non-database field (for example a counter or static image)
 	 */
 	
-	$aColumns = array( 'material_no','material_name','specification','unit','stock_min_qty','stock_max_qty','stock_safety','unit_price','stock_qty','status','create_date','last_modify');
+	$aColumns = array( 'purchase_order_id','purchase_type','require_quotation','requirement_description','order_date','delivery_date','order_returned','delivered','null','null');
 	
 	/* Indexed column (used for fast and accurate table cardinality) */
-	$sIndexColumn = "material_no";
+	$sIndexColumn = "purchase_order_id";
 	
 	/* DB table to use */
-	$sTable = "inventory";
+	$sTable = "purchaseorder";
 	
 //	include( $_SERVER['DOCUMENT_ROOT']."/class/products_db.php" );
 	include( "/website/class/".$site_db."_db.php" );
@@ -69,7 +69,7 @@
 	/*
 	 * Ordering
 	 */
-	$sOrder = "ORDER BY material_no ";
+	$sOrder = "ORDER BY purchase_order_id ";
 	/*
 	if ( isset( $_GET['iSortCol_0'] ) )
 	{
@@ -133,9 +133,9 @@
 	 
 	
 	if ($sWhere=="")
-		$sWhere = "WHERE (material_no <> '') ";
+		$sWhere = "WHERE (purchase_order_id <> '') ";
 	else
-		$sWhere .= " and (material_no <> '') ";
+		$sWhere .= " and (purchase_order_id <> '') ";
 	
 	
 	$sQuery = "

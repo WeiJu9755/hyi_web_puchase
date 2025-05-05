@@ -13,53 +13,55 @@ if (!($detect->isMobile() && !$detect->isTablet())) {
 }
 
 
-@include_once("/website/class/".$site_db."_info_class.php");
+@include_once("/website/class/" . $site_db . "_info_class.php");
 
 /* 使用xajax */
 @include_once '/website/xajax/xajax_core/xajax.inc.php';
 $xajax = new xajax();
 
 $xajax->registerFunction("DeleteRow");
-function DeleteRow($auto_seq,$site_db){
+function DeleteRow($auto_seq, $site_db)
+{
 
 	$objResponse = new xajaxResponse();
-	
+
 	$mDB = "";
 	$mDB = new MywebDB();
-	
+
 	//刪除主資料
-	$Qry="delete from inventory where auto_seq = '$auto_seq'";
+	$Qry = "delete from purchaseorder where auto_seq = '$auto_seq'";
 	$mDB->query($Qry);
-	
+
 	$mDB->remove();
-	
-    $objResponse->script("oTable = $('#db_table').dataTable();oTable.fnDraw(false)");
-    $objResponse->script("art.dialog.tips('相關資料已全數刪除!',2)");
+
+	$objResponse->script("oTable = $('#db_table').dataTable();oTable.fnDraw(false)");
+	$objResponse->script("art.dialog.tips('相關資料已全數刪除!',2)");
 
 	return $objResponse;
-	
+
 }
 
 $xajax->registerFunction("returnValue");
-function returnValue($auto_seq,$team_id){
+function returnValue($auto_seq, $team_id)
+{
 	$objResponse = new xajaxResponse();
 
 	$mDB = "";
 	$mDB = new MywebDB();
-	$Qry="select auto_seq from team_member where team_id = '$team_id'";
+	$Qry = "select auto_seq from team_member where team_id = '$team_id'";
 	$mDB->query($Qry);
 	$employee_total = $mDB->rowCount();
 	$mDB->remove();
-	
+
 	if ($employee_total > 0)
 		$show_employee_total = "<div class=\"inline size12\">人數：</div><div class=\"inline size12 red weight\">$employee_total</div>";
-	else 
+	else
 		$show_employee_total = "";
-	
-	
-	$objResponse->assign("employee_total".$auto_seq,"innerHTML",$show_employee_total);
-	
-    return $objResponse;
+
+
+	$objResponse->assign("employee_total" . $auto_seq, "innerHTML", $show_employee_total);
+
+	return $objResponse;
 }
 
 
@@ -70,9 +72,9 @@ $t = $_GET['t'];
 $mc = $_GET['mc'];
 $sc = $_GET['sc'];
 
-$tb = "inventory";
-$project_id = "202502110002";
-$auth_id = "ST001";
+$tb = "purchaseorder";
+$project_id = "202502110001";
+$auth_id = "PH001";
 
 $m_t = urlencode($_GET['t']);
 
@@ -89,7 +91,7 @@ $Confirm = getlang("確認");
 $Cancel = getlang("取消");
 
 
-$pubweburl = "//".$domainname;
+$pubweburl = "//" . $domainname;
 
 /*
 //設定權限
@@ -127,8 +129,8 @@ EOT;
 
 $fellow_count = 0;
 //取得指定管理人數
-$pjmyfellow_row = getkeyvalue2($site_db."_info","pjmyfellow","web_id = '$web_id' and project_id = '$project_id' and auth_id = '$auth_id' and pro_id = 'inventory'","count(*) as fellow_count");
-$fellow_count =$pjmyfellow_row['fellow_count'];
+$pjmyfellow_row = getkeyvalue2($site_db . "_info", "pjmyfellow", "web_id = '$web_id' and project_id = '$project_id' and auth_id = '$auth_id' and pro_id = 'purchaseorder'", "count(*) as fellow_count");
+$fellow_count = $pjmyfellow_row['fellow_count'];
 if ($fellow_count == 0)
 	$fellow_count = "";
 
@@ -143,15 +145,15 @@ if ($warning_count == 0)
 
 $pjItemManager = false;
 //檢查是否為指定管理人
-$pjmyfellow_row = getkeyvalue2($site_db."_info","pjmyfellow","web_id = '$web_id' and project_id = '$project_id' and auth_id = '$auth_id' and pro_id = 'inventory' and member_no = '$memberID'","count(*) as enable_count");
-$enable_count =$pjmyfellow_row['enable_count'];
+$pjmyfellow_row = getkeyvalue2($site_db . "_info", "pjmyfellow", "web_id = '$web_id' and project_id = '$project_id' and auth_id = '$auth_id' and pro_id = 'purchaseorder' and member_no = '$memberID'", "count(*) as enable_count");
+$enable_count = $pjmyfellow_row['enable_count'];
 if ($enable_count > 0)
 	$pjItemManager = true;
 
 
 //設定權限
 $cando = "N";
-if (($powerkey=="A") || ($super_admin=="Y") || ($pjItemManager == true)) {
+if (($powerkey == "A") || ($super_admin == "Y") || ($pjItemManager == true)) {
 	$cando = "Y";
 }
 
@@ -159,17 +161,17 @@ if (($powerkey=="A") || ($super_admin=="Y") || ($pjItemManager == true)) {
 //取得使用者員工身份
 $member_picture = getmemberpict160($memberID);
 
-$member_row = getkeyvalue2("memberinfo","member","member_no = '$memberID'","member_name");
+$member_row = getkeyvalue2("memberinfo", "member", "member_no = '$memberID'", "member_name");
 $member_name = $member_row['member_name'];
 
-$employee_row = getkeyvalue2($site_db."_info","employee","member_no = '$memberID'","count(*) as manager_count,employee_name,employee_type,team_id");
-$manager_count =$employee_row['manager_count'];
+$employee_row = getkeyvalue2($site_db . "_info", "employee", "member_no = '$memberID'", "count(*) as manager_count,employee_name,employee_type,team_id");
+$manager_count = $employee_row['manager_count'];
 $team_id = $employee_row['team_id'];
 if ($manager_count > 0) {
 	$employee_name = $employee_row['employee_name'];
 	$employee_type = $employee_row['employee_type'];
 
-	$team_row = getkeyvalue2($site_db."_info","team","team_id = '$team_id'","team_name");
+	$team_row = getkeyvalue2($site_db . "_info", "team", "team_id = '$team_id'", "team_name");
 	$team_name = $team_row['team_name'];
 } else {
 	$employee_name = $member_name;
@@ -177,7 +179,7 @@ if ($manager_count > 0) {
 }
 
 
-$member_logo=<<<EOT
+$member_logo = <<<EOT
 <div class="mytable bg-white m-auto rounded">
 	<div class="myrow">
 		<div class="mycell" style="text-align:center;width:73px;padding: 5px 0;">
@@ -206,10 +208,10 @@ if (((($super_admin=="Y") && ($admin_readonly == "Y")) || (($super_advanced=="Y"
 */
 
 //if ($cando == "Y") {
-	if (($super_admin == "Y") && ($admin_readonly == "Y")) {
-		$show_disabled = "disabled";
-		$show_disabled_warning = "<div class=\"size12 red weight text-center p-2\">此區為管理人專區，非經授權請勿進行任何處理</div>";
-	}
+if (($super_admin == "Y") && ($admin_readonly == "Y")) {
+	$show_disabled = "disabled";
+	$show_disabled_warning = "<div class=\"size12 red weight text-center p-2\">此區為管理人專區，非經授權請勿進行任何處理</div>";
+}
 //}
 
 
@@ -220,17 +222,17 @@ if ($cando == "Y") {
 
 	$show_modify_btn = "";
 
-		if (($powerkey == "A") || (($super_admin=="Y") && ($admin_readonly <> "Y"))) {
-$show_admin_list=<<<EOT
+	if (($powerkey == "A") || (($super_admin == "Y") && ($admin_readonly <> "Y"))) {
+		$show_admin_list = <<<EOT
 <div class="text-center">
 	<div class="btn-group me-2 mb-2" role="group">
-		<a role="button" class="btn btn-light" href="javascript:void(0);" onclick="openfancybox_edit('/index.php?ch=fellowlist&project_id=$project_id&auth_id=$auth_id&pro_id=inventory&t=指定管理人&fm=base',850,'96%',true);" title="指定管理人"><i class="bi bi-shield-fill-check size14 red inline me-2 vmiddle"></i><div class="inline size12 me-2">指定管理人</div><div class="inline red weight vmiddle">$fellow_count</div></a>
+		<a role="button" class="btn btn-light" href="javascript:void(0);" onclick="openfancybox_edit('/index.php?ch=fellowlist&project_id=$project_id&auth_id=$auth_id&pro_id=purchaseorder&t=指定管理人&fm=base',850,'96%',true);" title="指定管理人"><i class="bi bi-shield-fill-check size14 red inline me-2 vmiddle"></i><div class="inline size12 me-2">指定管理人</div><div class="inline red weight vmiddle">$fellow_count</div></a>
 	</div>
 </div>
 EOT;
-		}
+	}
 
-$show_modify_btn=<<<EOT
+	$show_modify_btn = <<<EOT
 <div class="text-center my-2">
 	<div class="btn-group me-2 mb-2" role="group">
 		<button type="button" class="btn btn-danger text-nowrap" onclick="openfancybox_edit('/index.php?ch=add&t=$t&fm=$fm',1200,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增資料</button>
@@ -242,7 +244,7 @@ EOT;
 
 
 
-$list_view=<<<EOT
+	$list_view = <<<EOT
 <div class="w-100 m-auto p-1 mb-5 bg-white">
 	<div class="container-fluid">
 		<div class="row">
@@ -261,14 +263,15 @@ $list_view=<<<EOT
 	<table class="table table-bordered border-dark w-100" id="db_table" style="min-width:1000px;">
 		<thead class="table-light border-dark">
 			<tr style="border-bottom: 1px solid #000;">
-				<th scope="col" class="text-center text-nowrap" style="width:10%;">NO.</th>
-				<th scope="col" class="text-center" style="width:14%;">請購單號</th>
-				<th scope="col" class="text-center" style="width:20%;">請購性質</th>
-				<th scope="col" class="text-center" style="width:7%;">報價種類</th>
-				<th scope="col" class="text-center" style="width:7%;">需求說明</th>
+				<th scope="col" class="text-center text-nowrap" style="width:5%;">NO.</th>
+				<th scope="col" class="text-center" style="width:7%;">採購單號</th>
+				<th scope="col" class="text-center" style="width:7%;">採購性質</th>
+				<th scope="col" class="text-center" style="width:7%;">是否報價</th>
+				<th scope="col" class="text-center" style="width:25%;">需求說明</th>
 				<th scope="col" class="text-center" style="width:7%;">訂購日期</th>
+				<th scope="col" class="text-center" style="width:7%;">交貨日期</th>
 				<th scope="col" class="text-center" style="width:7%;">訂單回傳</th>
-				<th scope="col" class="text-center" style="width:7%;">到貨狀態</th>
+				<th scope="col" class="text-center" style="width:7%;">是否到貨</th>
 				<th scope="col" class="text-center text-nowrap" style="width:7%;">處理</th>
 			</tr>
 		</thead>
@@ -281,14 +284,14 @@ $list_view=<<<EOT
 </div>
 EOT;
 
-	
-$scroll = true;
-if (!($detect->isMobile() && !$detect->isTablet())) {
-	$scroll = false;
-}
 
-	
-$show_view=<<<EOT
+	$scroll = true;
+	if (!($detect->isMobile() && !$detect->isTablet())) {
+		$scroll = false;
+	}
+
+
+	$show_view = <<<EOT
 <style type="text/css">
 #db_table {
 	width: 100% !Important;
@@ -323,83 +326,76 @@ $list_view
 			"fixedColumns": {
         		left: 1,
     		},
-			"fnRowCallback": function( nRow, aData, iDisplayIndex ) { 
+			"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
 
-				var material_no = "";
+				
+				var serial_number = iDisplayIndex + 1;
+				$('td:eq(0)', nRow).html('<div class="size14 text-center">'+serial_number+'</div>');
+
+				var purchase_order_id = "";
 				if (aData[0] != null && aData[0] != "") {
-					material_no = aData[0];
+					purchase_order_id = aData[0];
 				}
-				$('td:eq(0)', nRow).html( '<div class="size14 weight blue02 text-center">'+material_no+'</div>' );
+				$('td:eq(1)', nRow).html('<div class="size14 weight blue02 text-center">'+purchase_order_id+'</div>');
 
-				var material_name = "";
+				var purchase_type = "";
 				if (aData[1] != null && aData[1] != "") {
-					material_name = aData[1];
+					purchase_type = aData[1];
 				}
-				$('td:eq(1)', nRow).html( '<div class="size14 weight text-center">'+material_name+'</div>' );
+				$('td:eq(2)', nRow).html('<div class="size14 weight text-center">'+purchase_type+'</div>');
 
-				var specification = "";
+				var require_quotation = "";
 				if (aData[2] != null && aData[2] != "") {
-					specification = aData[2];
+					require_quotation = aData[2];
 				}
-				$('td:eq(2)', nRow).html( '<div class="size14 text-start">'+specification+'</div>' );
+				$('td:eq(3)', nRow).html('<div class="size14 weight text-center">'+require_quotation+'</div>');
 
-				var unit = "";
+				var requirement_description = "";
 				if (aData[3] != null && aData[3] != "") {
-					unit = aData[3];
+					requirement_description = aData[3];
 				}
-				$('td:eq(3)', nRow).html( '<div class="size14 text-center">'+unit+'</div>' );
+				$('td:eq(4)', nRow).html('<div class="size14 text-start">'+requirement_description+'</div>');
 
-				var stock_min_qty = '';
-				if (aData[4] != null && aData[4] != "" && aData[4] != "0") {
-					var stock_min_qty = number_format(aData[4]);
+				var order_date = '';
+				if (aData[4] != null && aData[4] != "" ) {
+					order_date = aData[4];
 				}
-				$('td:eq(4)', nRow).html( '<div class="size14 text-center">'+stock_min_qty+'</div>' );
+				$('td:eq(5)', nRow).html('<div class="size14 text-center">'+order_date+'</div>');
 
-				var stock_max_qty = '';
-				if (aData[5] != null && aData[5] != "" && aData[5] != "0") {
-					var stock_max_qty = number_format(aData[5]);
+				var delivery_date = '';
+				if (aData[5] != null && aData[5] != "") {
+					delivery_date = aData[5];
 				}
-				$('td:eq(5)', nRow).html( '<div class="size14 text-center">'+stock_max_qty+'</div>' );
+				$('td:eq(6)', nRow).html('<div class="size14 text-center">'+delivery_date+'</div>');
 
-				var stock_safety = '';
-				if (aData[6] != null && aData[6] != "" && aData[6] != "0") {
-					var stock_safety = number_format(aData[6]);
+				var order_returned = '';
+				if (aData[6] === 'Y') {
+					order_returned = '<span class="text-success"><i class="bi bi-check-circle"></i> 是</span>';
+				} else if (aData[6] === 'N') {
+					order_returned = '<span class="text-danger"><i class="bi bi-x-circle"></i> 否</span>';
 				}
-				$('td:eq(6)', nRow).html( '<div class="size14 text-center">'+stock_safety+'</div>' );
+				$('td:eq(7)', nRow).html('<div class="size14 text-center">'+order_returned+'</div>');
 
-				var unit_price = '';
-				if (aData[7] != null && aData[7] != "" && aData[7] != "0") {
-					var unit_price = number_format(aData[7]);
+				var delivered = '';
+				if (aData[7] === 'Y') {
+					delivered = '<span class="text-success">是</span>';
+				} else if (aData[7] === 'N') {
+					delivered = '<span class="text-danger">否</span>';
 				}
-				$('td:eq(7)', nRow).html( '<div class="size14 text-center">'+unit_price+'</div>' );
-
-				// var stock_qty = '';
-				// if (aData[8] != null && aData[8] != "" && aData[8] != "0") {
-				// 	var stock_qty = number_format(aData[8]);
-				// }
-				// $('td:eq(8)', nRow).html( '<div class="size14 text-center">'+stock_qty+'</div>' );
-
-				var status = "";
-				if (aData[9] != null && aData[9] != "") {
-					status = aData[9];
-				}
-				$('td:eq(9)', nRow).html( '<div class="size14 text-center">'+status+'</div>' );
+				$('td:eq(8)', nRow).html('<div class="size14 text-center">'+delivered+'</div>');
 
 
 				var show_btn = '';
-				
 				var url1 = "openfancybox_edit('/index.php?ch=edit&material_no="+aData[0]+"&fm=$fm',1200,'96%','');";
-
 				var mdel = "myDel("+aData[0]+",'$site_db');";
 				show_btn = '<div class="btn-group text-nowrap">'
-						+'<button type="button" class="btn btn-light py-0 my-0" onclick="'+url1+'" title="修改"><i class="bi bi-pencil-square"></i></button>'
-						+'<button type="button" class="btn btn-light py-0 my-0" onclick="'+mdel+'" title="刪除"><i class="bi bi-trash"></i></button>'
-						+'</div>';
+						+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+url1+'" title="修改"><i class="bi bi-pencil-square"></i></button>'
+						+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+mdel+'" title="刪除"><i class="bi bi-trash"></i></button>'
+						+ '</div>';
 				
-				$('td:eq(10)', nRow).html( '<div class="text-center">'+show_btn+'</div>' );
-				
+				$('td:eq(9)', nRow).html('<div class="text-center">'+show_btn+'</div>');
+
 				return nRow;
-			
 			}
 			
 		});

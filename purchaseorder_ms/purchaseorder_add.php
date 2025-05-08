@@ -1,5 +1,10 @@
 <?php
 
+session_start();
+
+$memberID = $_SESSION['memberID'];
+$powerkey = $_SESSION['powerkey'];
+
 
 require_once '/website/os/Mobile-Detect-2.8.34/Mobile_Detect.php';
 $detect = new Mobile_Detect;
@@ -17,76 +22,125 @@ function processform($aFormValues){
 
 	$objResponse = new xajaxResponse();
 
-	if (trim($aFormValues['material_no1']) == "") {
-		$objResponse->script("jAlert('警示', '請選擇大分類碼', 'red', '', 2000);");
+	if (trim($aFormValues['purchase_type']) == "") {
+		$objResponse->script("jAlert('警示', '請選擇採購性質', 'red', '', 2000);");
 		return $objResponse;
-		exit;
-	}
-	if (trim($aFormValues['material_no2']) == "") {
-		$objResponse->script("jAlert('警示', '請選擇小分類碼', 'red', '', 2000);");
-		return $objResponse;
-		exit;
-	}
-	if (trim($aFormValues['material_no3']) == "") {
-		$objResponse->script("jAlert('警示', '請輸入規格碼', 'red', '', 2000);");
-		return $objResponse;
-		exit;
-	}
-	if (trim($aFormValues['material_no4']) == "") {
-		$objResponse->script("jAlert('警示', '請輸入流水號', 'red', '', 2000);");
-		return $objResponse;
-		exit;
-	}
-	if (trim($aFormValues['material_no5']) == "") {
-		$objResponse->script("jAlert('警示', '請選擇廠商代號', 'red', '', 2000);");
-		return $objResponse;
-		exit;
+
 	}
 
-	/*
-	if (trim($aFormValues['material_no']) == "") {
-		$objResponse->script("jAlert('警示', '請輸入物料編碼', 'red', '', 2000);");
+
+	if (trim($aFormValues['contract_type']) == "") {
+		$objResponse->script("jAlert('警示', '請選擇採購合約種類', 'red', '', 2000);");
 		return $objResponse;
-		exit;
+
 	}
-	*/
-	if (trim($aFormValues['material_name']) == "") {
-		$objResponse->script("jAlert('警示', '請輸入物料名稱', 'red', '', 2000);");
+
+	if (trim($aFormValues['makeby']) == "") {
+		$objResponse->script("jAlert('警示', '請輸入經辦人', 'red', '', 2000);");
 		return $objResponse;
-		exit;
+
 	}
+	
+	if (trim($aFormValues['requirement_description']) == "") {
+		$objResponse->script("jAlert('警示', '請輸入採購需求說明', 'red', '', 2000);");
+		return $objResponse;
+
+	}
+
+	if (trim($aFormValues['order_date']) == "") {
+		$objResponse->script("jAlert('警示', '請輸入採購日期', 'red', '', 2000);");
+		return $objResponse;
+
+	}
+
+	if (trim($aFormValues['company_id']) == "") {
+		$objResponse->script("jAlert('警示', '請選擇廠商', 'red', '', 2000);");
+		return $objResponse;
+
+	}
+
+	if (trim($aFormValues['company_id']) == "") {
+		$objResponse->script("jAlert('警示', '請選擇廠商', 'red', '', 2000);");
+		return $objResponse;
+
+	}
+
+	
 	
 	$fm					= trim($aFormValues['fm']);
 	$site_db			= trim($aFormValues['site_db']);
 	$templates			= trim($aFormValues['templates']);
-	$material_no			= trim($aFormValues['material_no']);
-	$material_name 			= htmlspecialchars(trim($aFormValues['material_name']), ENT_QUOTES, 'utf8');
-	
+	$handler_id		= trim($aFormValues['handler_id']);
+	$big_fixed = (trim($aFormValues['big_fixed']) === "Y") ? "Y" : "N";
+	$purchase_type	= trim($aFormValues['purchase_type']);
+	$contract_id = trim($aFormValues['contract_id']);
+	$contract_seq = trim($aFormValues['contract_seq']);
+	$contract_type = trim($aFormValues['contract_type']);
+	$require_quotation = (trim($aFormValues['require_quotation']) === "Y") ? "Y" : "N";
+	$makeby = trim($aFormValues['makeby']);
+	$requirement_description = trim($aFormValues['requirement_description']);
+	$order_date = trim($aFormValues['order_date']);
+	$delivery_date = trim($aFormValues['delivery_date']);
+	$has_order = (trim($aFormValues['has_order']) === "Y") ? "Y" : "N";
+	$order_returned = (trim($aFormValues['order_returned']) === "Y") ? "Y" : "N";
+	$delivered = (trim($aFormValues['delivered']) === "Y") ? "Y" : "N";
+	$company_id = trim($aFormValues['company_id']);
+	$location = trim($aFormValues['location']);
+	$purchase_order_id = "TEST-2";
+	// $mDB = "";
+	// $mDB = new MywebDB();
+	// $Qry="select * from contract where contract_id='$contract_id' ";
+	// $mDB->query($Qry);
+	// if ($mDB->rowCount() > 0) {
+	// 	$row=$mDB->fetchRow(2);
+	// 	$contract_id = $row['contract_id'];
+	// 	$contract_abbreviation = $row['contract_abbreviation'];
+	// }
+	// if($big_fixed == "Y"){
+	// 	$purchase_order_id = $contract_abbreviation ."_RF_". $employee_id ."_". date("md");
+	// }else{
+	// 	$purchase_order_id = $contract_abbreviation ."_". $employee_id . date("md");
+	// }
+
 
 	//存入實體資料庫中
 	$mDB = "";
 	$mDB = new MywebDB();
 	
-	//檢查帳號是否重複
-	$Qry="select material_no from inventory where material_no = '$material_no'";
-	$mDB->query($Qry);
-	$total = $mDB->rowCount();
-	if ($total > 0) {
-		$mDB->remove();
-		$objResponse->script("jAlert('警示', '您輸入的物料編碼已重複，請重新輸入新的', 'red', '', 2000);");
-		return $objResponse;
-		exit;
-	}
-	
-	
-	$Qry="insert into inventory (material_no,material_name,create_date,last_modify) values ('$material_no','$material_name',now(),now())";
+	$now = date("Y-m-d H:i:s");
+	$Qry = "INSERT INTO `purchaseorder` (
+		`purchase_order_id`, `handler_id`, `purchase_type`, `contract_id`, `contract_seq`,
+		`contract_type`, `big_fixed`, `require_quotation`, `makeby`, `requirement_description`,
+		`order_date`, `delivery_date`, `has_order`, `order_returned`, `delivered`,`company_id`, `location`,
+		`created_at`, `updated_at` 
+	  ) VALUES (
+		'$purchase_order_id',
+		'$handler_id', 
+		'$purchase_type', 
+		'$contract_id', 
+		'$contract_seq', 
+		'$contract_type', 
+		'$big_fixed',
+		'$require_quotation', 
+		'$makeby', 
+		'$requirement_description', 
+		'$order_date', 
+		'$delivery_date',
+		'$has_order', 
+		'$order_returned', 
+		'$delivered',
+		'$company_id',
+		'$location',
+		'$now',
+		'$now'
+	  )";
 	$mDB->query($Qry);
 
 	$mDB->remove();
-	if (!empty($material_no)) {
+	if (!empty($purchase_order_id)) {
 		$objResponse->script("myDraw();");
 		$objResponse->script("art.dialog.tips('已新增，請繼續輸入其他資料...',2);");
-		$objResponse->script("window.location='/?ch=edit&material_no=$material_no&fm=$fm';");
+		$objResponse->script("parent.$.fancybox.close();");
 	} else {
 		$objResponse->script("jAlert('警示', '發生不明原因的錯誤，資料未新增，請再試一次!', 'red', '', 2000);");
 		$objResponse->script("parent.$.fancybox.close();");
@@ -95,6 +149,47 @@ function processform($aFormValues){
 	return $objResponse;	
 }
 
+
+$xajax->registerFunction("getno");
+function getno(){
+
+	$objResponse = new xajaxResponse();
+
+	//系統取號
+
+	//自動產生 purchase_order_id
+	$today = date("Ymd");
+
+	$mDB = "";
+	$mDB = new MywebDB();
+	
+	//取得最後代號
+	$Qry = "SELECT purchase_order_id FROM stock_in WHERE SUBSTRING(purchase_order_id,3,8) = '$today' ORDER BY purchase_order_id DESC LIMIT 0,1";
+	$mDB->query($Qry);
+	if ($mDB->rowCount() > 0) {
+		$row=$mDB->fetchRow(2);
+		$temp_purchase_order_id = $row['purchase_order_id'];
+		$str4 = substr($temp_purchase_order_id,-4,4);
+		$num = (int)$str4+1;
+		$filled_int = sprintf("%04d", $num);
+		$new_purchase_order_id = "SI".$today.$filled_int;
+	} else {
+		$new_purchase_order_id = "SI".$today."0001";
+	}
+
+	$mDB->remove();
+
+
+
+
+	
+	$objResponse->assign("purchase_order_id","value",$new_purchase_order_id);
+
+	return $objResponse;
+
+}
+
+
 $xajax->processRequest();
 
 $fm = $_GET['fm'];
@@ -102,48 +197,20 @@ $t = $_GET['t'];
 
 $mess_title = $title;
 
+//從會員帳號取得員工代號
+$employee_row = getkeyvalue2($site_db.'_info','employee',"member_no = '$memberID'",'employee_id');
+$employee_id = $employee_row['employee_id'];
+
+
+
+
+$default_day = date("Y-m-d");
+
 $mDB = "";
 $mDB = new MywebDB();
 
 
-$m_code_no = "";
-
-$getsmallclass = "/smarty/templates/$site_db/$templates/sub_modal/base/pjclass_ms/getsmallclass.php";
-$getmainclass = "/smarty/templates/$site_db/$templates/sub_modal/base/pjclass_ms/getmainclass.php";
-
-$pro_id = "materialcategory";
-//載入大分類選項
-$Qry="select code_no,caption from pjclass where pro_id = '$pro_id' and small_class = '0' order by orderby";
-$mDB->query($Qry);
-$select_material_no1 = "";
-$select_material_no1 .= "<option></option>";
-
-if ($mDB->rowCount() > 0) {
-    while ($row=$mDB->fetchRow(2)) {
-		$mc_code_no = $row['code_no'];
-		$mc_caption = $row['caption'];
-		//$select_material_no1 .= "<option value=\"$mc_caption\" ".mySelect($mc_caption,$m_code_no).">$mc_caption</option>";
-		$select_material_no1 .= "<option value=\"$mc_code_no\">{$mc_code_no} {$mc_caption}</option>";
-	}
-}
-//檢查並設定細類
-//先取出 caption () 的 main_class 值
-$m_row = getkeyvalue2($site_db."_info","pjclass","pro_id = '$pro_id' and small_class = '0' and code_no = '$m_code_no'","main_class");
-$main_class_seq = $m_row['main_class'];
-//從資料庫中讀取大分類資料
-$Qry="select code_no,caption from pjclass where pro_id = '$pro_id' and main_class = '$main_class_seq' and small_class <> '0' order by orderby";
-$select_material_no2 = "";
-$select_material_no2 .= "<option></option>";
-$mDB->query($Qry);
-if ($mDB->rowCount() > 0) {
-	while ($row=$mDB->fetchRow(2)) {
-		$sc_code_no = $row['code_no'];
-		$sc_caption = $row['caption'];
-		$select_material_no2 .= "<option value=\"$sc_code_no\">{$sc_code_no} {$sc_caption}</option>";
-	}
-}	
-
-
+/*
 //載入廠商
 $Qry="SELECT supplier_id,supplier_name FROM supplier ORDER BY supplier_id";
 $mDB->query($Qry);
@@ -158,9 +225,40 @@ if ($mDB->rowCount() > 0) {
 		$select_supplier .= "<option value='$ch_supplier_id'>{$ch_supplier_id} {$ch_supplier_name}</option>";
 	}
 }
+*/
 
+//載入合約
 
+$Qry="SELECT auto_seq,contract_id,contract_caption FROM contract ORDER BY auto_seq";
+$mDB->query($Qry);
+$select_contract = "";
+$select_contract .= "<option></option>";
 
+if ($mDB->rowCount() > 0) {
+	while ($row=$mDB->fetchRow(2)) {
+		$contract_id = $row['contract_id'];
+		$contract_name = $row['contract_caption'];
+		$select_contract .= "<option value=\"$contract_id\" ".mySelect($contract_id,"").">$contract_name</option>";
+	}
+}
+
+//載入廠商
+
+$Qry="SELECT supplier_id,supplier_name,short_name FROM supplier ORDER BY supplier_id";
+$mDB->query($Qry);
+$select_supplier = "";
+$select_supplier .= "<option></option>";
+
+if ($mDB->rowCount() > 0) {
+	while ($row=$mDB->fetchRow(2)) {
+		$supplier_id = $row['supplier_id'];
+		$supplier_name = $row['supplier_name'];
+		$short_name = $row['short_name'];
+		$select_supplier .= "<option value=\"$supplier_id\" ".mySelect($supplier_id,"").">$supplier_id  $supplier_name</option>";
+	}
+}
+
+  
 $mDB->remove();
 
 
@@ -183,12 +281,13 @@ $style_css=<<<EOT
 
 #info_container {
 	width: 100% !Important;
-	max-width: 1150px; !Important;
+	max-width: 1400px; !Important;
 	margin: 0 auto !Important;
 }
 
-.field_div1 {width:100%;max-width:200px;display: none;font-size:18px;color:#000;text-align:right;font-weight:700;padding:15px 10px 0 0;vertical-align: top;display:inline-block;zoom: 1;*display: inline;}
-.field_div2 {width:100%;max-width:900px;display: none;font-size:18px;color:#000;text-align:left;font-weight:700;padding:8px 0 0 0;vertical-align: top;display:inline-block;zoom: 1;*display: inline;}
+.field_div1 {width:100%;max-width:150px;display: none;font-size:18px;color:#000;text-align:right;font-weight:700;padding:15px 10px 0 0;vertical-align: top;display:inline-block;zoom: 1;*display: inline;}
+.field_div2 {width:100%;max-width:400px;display: none;font-size:18px;color:#000;text-align:left;font-weight:700;padding:8px 0 0 0;vertical-align: top;display:inline-block;zoom: 1;*display: inline;}
+.field_div3 {width:100%;max-width:400px;display: none;font-size:18px;color:#000;text-align:left;font-weight:700;padding:8px 0 0 0;vertical-align: top;display:inline-block;zoom: 1;*display: inline;}
 
 </style>
 EOT;
@@ -235,76 +334,179 @@ $style_css
 		<div id="info_container">
 			<form method="post" id="addForm" name="addForm" enctype="multipart/form-data" action="javascript:void(null);">
 				<div class="field_container3">
-					<div class="mytable w-100 mb-5">
-						<div class="myrow">
-							<div class="mycell size14 weight text-center p-2" style="width:20%;">
-								<div>大分類碼</div> 
-								<div class="size08 blue02 text-nowrap">(共英文字1碼)</div>
+					<div class="container-fluid">
+						<div class="row">
+							<div class="col-lg-12 col-sm-12 col-md-12">
+								<div class="field_div1">合約案別:</div> 
+								<div class="field_div2">
+									<select id="contract_id" name="contract_id" placeholder="請選擇合約" style="width:100%;max-width:250px;">
+										$select_contract
+									</select>
+								</div> 
+							</div> 
+						</div>
+						<div class="row">
+							<div class="col-lg-6 col-sm-12 col-md-12">
+								<div class="field_div1">工項:</div> 
+								<div class="field_div3">
+									<div class="input-group" style="width:100%;max-width:155px;">
+										<input type="number" class="form-control" name="contract_seq" id="contract_seq" placeholder="請輸入工項代號" >
+									</div>
+								</div>
+							</div> 
+							<div class="col-lg-6 col-sm-12 col-md-12">
+								<div class="field_div1">合約類別:</div> 
+								<div class="field_div2">
+									<select id="contract_type" name="contract_type" placeholder="請選擇合約類別" style="width:100%;max-width:250px;">
+										<option></option>
+										<option value="合約內">合約內</option>
+										<option value="合約外">合約外</option>
+										<option value="其他">其他</option>
+									</select>
+								</div> 
+							</div> 
+						</div>
+						<div class="row">
+							<div class="col-lg-6 col-sm-12 col-md-12">
+								<div class="field_div1">採購日期:</div> 
+								<div class="field_div3">
+									<div class="input-group" id="order_date"  style="width:100%;max-width:250px;">
+										<input type="text" class="form-control" name="order_date" placeholder="請輸入入庫日期" aria-describedby="order_date" value="$default_day">
+										<button class="btn btn-outline-secondary input-group-append input-group-addon" type="button" data-target="#order_date" data-toggle="datetimepicker"><i class="bi bi-calendar"></i></button>
+									</div>
+									<script type="text/javascript">
+										$(function () {
+											$('#order_date').datetimepicker({
+												locale: 'zh-tw'
+												,format:"YYYY-MM-DD"
+												,allowInputToggle: true
+											});
+										});
+									</script>
+								</div> 
+							</div> 
+							<div class="col-lg-6 col-sm-12 col-md-12">
+								<div class="field_div1">採購性質:</div> 
+								<div class="field_div2">
+									<select id="purchase_type" name="purchase_type" placeholder="請選擇採購性質" style="width:100%;max-width:250px;">
+										<option></option>
+										<option value="採購">採購</option>
+										<option value="勞務">勞務</option>
+										<option value="勞務+採購">勞務+採購</option>
+									</select>
+								</div> 
+							</div> 
+						</div>
+						<div class="row">
+							<div class="col-lg-6 col-sm-12 col-md-12">
+									<div class="field_div1">經辦人:</div> 
+									<div class="field_div3">
+										
+										<div class="input-group text-nowrap" style="width:100%;max-width:450px;">
+											<input readonly type="text" class="form-control w-25" id="handler_id" name="handler_id" aria-describedby="handler_id_addon" value="$employee_id"/>
+											<input readonly type="text" class="form-control w-50" id="makeby" name="makeby"  value="$makeby"/>
+											<button class="btn btn-outline-secondary w-25" type="button" id="handler_id_addon" onclick="openfancybox_edit('/index.php?ch=ch_employee&fm=$fm',800,'96%','');">選擇員工</button>
+										</div> 
+									</div> 
+								</div> 
 							</div>
-							<div class="mycell size14 weight text-center p-2" style="width:20%;">
-								<div>小分類碼</div> 
-								<div class="size08 blue02 text-nowrap">(共3碼:英文字1碼+2碼數字)</div>
-							</div> 
-							<div class="mycell size14 weight text-center p-2" style="width:20%;">
-								<div>規格碼</div> 
-								<div class="size08 blue02 text-nowrap">(共3碼數字)</div>
-							</div> 
-							<div class="mycell size14 weight text-center p-2" style="width:20%;"> 
-								<div>流水號</div> 
-								<div class="size08 blue02 text-nowrap">(共3碼數字)</div>
-							</div> 
-							<div class="mycell size14 weight text-center p-2" style="width:20%;">
-								<div>廠商代號</div> 
-								<div class="size08 blue02 text-nowrap">(共4碼:英文字S+3碼數字)</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-6 col-sm-12 col-md-12">
+								<div class="field_div1">需求描述:</div> 
+								<div class="field_div3">
+									<textarea  name="requirement_description" id="requirement_description" rows="4" placeholder="請輸入需求描述" style="width:100%"></textarea>
+								</div> 
 							</div> 
 						</div>
-						<div class="myrow">
-							<div class="mycell size14 weight text-center px-2">
-								<select class="form-select w-100" name="material_no1" id="material_no1">
-									$select_material_no1
-								</select>
-							</div> 
-							<div class="mycell size14 weight text-center px-2">
-								<select class="form-select w-100" name="material_no2" id="material_no2">
-									$select_material_no2
-								</select>
-							</div> 
-							<div class="mycell size14 weight text-center px-2">
-								<input type="text" class="inputtext" id="material_no3" name="material_no3" size="3" maxlength="3" style="width:100%;"/>
-							</div> 
-							<div class="mycell size14 weight text-center px-2">
-								<input type="text" class="inputtext" id="material_no4" name="material_no4" size="3" maxlength="3" style="width:100%;"/>
-							</div> 
-							<div class="mycell size14 weight text-center px-2">
-								<select class="form-select w-100" name="material_no5" id="material_no5">
-									$select_supplier
-								</select>
+						<div class="row">
+							<div class="col-lg-12 col-sm-12 col-md-12">
+								<div class="field_div1">採購廠商:</div> 
+								<div class="field_div2">
+									<select id="company_id" name="company_id" placeholder="請選擇廠商" style="width:100%;max-width:250px;">
+										$select_supplier
+									</select>
+								</div> 
 							</div> 
 						</div>
-					</div>
-					<!--
-					<div class="text-center mt-2 mb-3">
-						<button type="button" class="btn btn-warning btn-lg px-5" onclick="">確認物料編碼</button>
-					</div>
-					-->
-					<div>
-						<div class="field_div1">物料編碼:</div> 
-						<div class="field_div2">
-							<input readonly type="text" class="inputtext inline me-2" id="material_no" name="material_no" size="30" maxlength="30" style="width:100%;max-width:300px;"/>
-							<div id="material_no_warning" class="inline weight red"></div>
-						</div> 
-					</div>
-					<div>
-						<div class="field_div1">物料名稱:</div> 
-						<div class="field_div2">
-							<input type="text" class="inputtext" id="material_name" name="material_name" size="80" maxlength="120" style="width:100%;max-width:800px;"/>
-						</div> 
+						<div class="row">
+							<div class="col-lg-12 col-sm-12 col-md-12">
+								<div class="field_div1">施作地點:</div> 
+								<div class="field_div2">
+									<input type="text" class="inputtext" name="location" id="location" size="50" placeholder="請輸入施作地點" maxlength="50" style="width:100%;max-width:250px;"/>
+								</div> 
+							</div> 
+						</div>
+						<div class="row d-flex flex-wrap gap-2">
+							<div class="field_div1 gap-2">採購事項確認:</div> 
+							<div class="col-lg-1 col-sm-1 col-md-1 mt-2 mb-2 ">
+									<div class="field_div2 ">
+										<input type="checkbox" class="inputtext" name="big_fixed" id="big_fixed" value="Y" >
+										<label for="big_fixed" class="red">大修</label>
+									</div> 
+							</div>
+							<div class="col-lg-1 col-sm-1 col-md-1 mt-2 mb-2 ">
+									<div class="field_div2 ">
+										<input type="checkbox" class="inputtext" name="require_quotation" id="require_quotation" value="Y" >
+										<label for="require_quotation" >報價</label>
+									</div> 
+							</div>
+							<div class="col-lg-1 col-sm-1 col-md-1 mt-2 mb-2 ">
+									<div class="field_div2 ">
+										<input type="checkbox" class="inputtext" name="has_order" id="has_order" value="Y" >
+										<label for="has_order" >訂單</label>
+									</div> 
+							</div>
+							<div class="col-lg-1 col-sm-1 col-md-12 mt-2 mb-2 ">
+									<div class="field_div2 ">
+										<input type="checkbox" class="inputtext" name="order_returned" id="order_returned" value="Y" >
+										<label for="order_returned" >訂單回傳</label>
+									</div> 
+							</div>
+							<div class="col-lg-1 col-sm-1 col-md-1 mt-2 mb-2 ms-4">
+									<div class="field_div2 ">
+										<input type="checkbox" class="inputtext" name="delivered" id="delivered" value="Y" >
+										<label for="delivered" >到貨</label>
+									</div> 
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-6 col-sm-12 col-md-12">
+								<div class="field_div1">到貨日期:</div> 
+								<div class="field_div3">
+									<div class="input-group" id="delivery_date"  style="width:100%;max-width:250px;">
+										<input type="text" class="form-control" name="delivery_date" placeholder="請輸入入庫日期" aria-describedby="delivery_date" value="$default_day">
+										<button class="btn btn-outline-secondary input-group-append input-group-addon" type="button" data-target="#delivery_date" data-toggle="datetimepicker"><i class="bi bi-calendar"></i></button>
+									</div>
+									<script type="text/javascript">
+										$(function () {
+											$('#delivery_date').datetimepicker({
+												locale: 'zh-tw'
+												,format:"YYYY-MM-DD"
+												,allowInputToggle: true
+											});
+										});
+									</script>
+								</div> 
+							</div> 
+						</div>
 					</div>
 				</div>
+
+				<div class="row">
+							<div class="col-lg-12 col-sm-12 col-md-12">
+								<div class="field_div1">入庫單號:</div> 
+								<div class="field_div3">
+									<input type="text" class="inputtext" id="purchase_order_id" name="purchase_order_id" size="20" maxlength="20" style="width:100%;max-width:250px;"/>
+									<button type="button" class="btn btn-success" onclick="xajax_getno();"><i class="bi bi-recycle"></i>&nbsp;系統取號</button>
+								</div> 
+							</div> 
+						</div>
 				<div class="form_btn_div mt-5">
 					<input type="hidden" name="fm" value="$fm" />
 					<input type="hidden" name="site_db" value="$site_db" />
 					<input type="hidden" name="templates" value="$templates" />
+					<input type="hidden" name="employee_id" value="$employee_id" />
 					<button class="btn btn-primary" type="button" onclick="CheckValue(this.form);" style="padding: 10px;margin-right: 10px;"><i class="bi bi-check-lg green"></i>&nbsp;確定新增</button>
 					<button class="btn btn-danger" type="button" onclick="parent.myDraw();parent.$.fancybox.close();" style="padding: 10px;"><i class="bi bi-power"></i>&nbsp;關閉</button>
 				</div>
@@ -324,117 +526,8 @@ var myDraw = function(){
 	oTable = parent.$('#db_table').dataTable();
 	oTable.fnDraw(false);
 }
-	
-function getSelectVal(){ 
-	$("option",material_no2).remove(); //清空原有的選項
-	var main_class_val = $("#material_no1").val();
-    $.getJSON('$getsmallclass',{main_class:main_class_val,site_db:'$site_db',pro_id:'$pro_id'},function(json){ 
-        var small_class = $("#material_no2"); 
-        var option = "<option></option>";
-		small_class.append(option);
-        $.each(json,function(index,array){ 
-			option = "<option value='"+array['code_no']+"'>"+array['code_no']+' '+array['caption']+"</option>"; 
-            small_class.append(option); 
-        }); 
-    });
-}
 
-$(function(){ 
-    $("#material_no1").change(function(){ 
-        getSelectVal(); 
-		update_material_no();
-    }); 
-});
-
-$(function(){ 
-    $("#material_no2").change(function(){ 
-		update_material_no();
-    }); 
-});
-
-
-//更新大分類
-function getMainSelectVal(){ 
-    $.getJSON("$getmainclass",{site_db:'$site_db',pro_id:'$pro_id'},function(json){ 
-        var main_class = $("#material_no1"); 
-		var last_option = main_class.val();
-        $("option",material_no1).remove(); //清空原有的選項
-        var option = "<option></option>";
-		main_class.append(option);
-        $.each(json,function(index,array){
-			if (array['caption'] == last_option)
-				option = "<option value='"+array['caption']+"' selected>"+array['caption']+"</option>"; 
-			else
-				option = "<option value='"+array['caption']+"'>"+array['caption']+"</option>"; 
-            main_class.append(option); 
-        }); 
-    }); 
-}
-
-</script>
-<script>
-
-$('#material_no3').on('keyup', function() {
-  update_material_no();
-});
-
-$('#material_no4').on('keyup', function() {
-  update_material_no();
-});
-
-$(function(){ 
-    $("#material_no5").change(function(){ 
-		update_material_no();
-    }); 
-});
-
-//更新編碼
-function update_material_no(){ 
-	var material_no1 = $("#material_no1").val();
-	if (material_no1 == null)
-		material_no1 = '-';
-
-	var material_no2 = $("#material_no2").val();
-	if (material_no2 == null)
-		material_no2 = '';
-
-	// 如果長度小於3，就補空白
-  	while (material_no2.length < 3) {
-    	material_no2 += '-';
-  	}
-
-	var material_no3 = $("#material_no3").val();
-	if (material_no3 == null)
-		material_no3 = '';
-
-	// 如果長度小於3，就補空白
-  	while (material_no3.length < 3) {
-    	material_no3 += '-';
-  	}
-
-	var material_no4 = $("#material_no4").val();
-	if (material_no4 == null)
-		material_no4 = '';
-
-	// 如果長度小於3，就補空白
-  	while (material_no4.length < 3) {
-    	material_no4 += '-';
-  	}
-
-	var material_no5 = $("#material_no5").val();
-	if (material_no5 == null)
-		material_no5 = '';
-
-	// 如果長度小於4，就補空白
-  	while (material_no5.length < 4) {
-    	material_no5 += '-';
-  	}
-
-	//var value_str = value.replace(/\s/g, '*');
-
-	$("#material_no").val(material_no1+material_no2+material_no3+material_no4+material_no5);
-
-}
+xajax_getno();
 
 </script>
 EOT;

@@ -235,7 +235,7 @@ EOT;
 	$show_modify_btn = <<<EOT
 <div class="text-center my-2">
 	<div class="btn-group me-2 mb-2" role="group">
-		<button type="button" class="btn btn-danger text-nowrap" onclick="openfancybox_edit('/index.php?ch=add&t=$t&fm=$fm',1200,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增資料</button>
+		<button type="button" class="btn btn-danger text-nowrap" onclick="openfancybox_edit('/index.php?ch=add&t=$t&fm=$fm',1200,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增採購單</button>
 		<button type="button" class="btn btn-success text-nowrap" onclick="myDraw();"><i class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
 	</div>
 </div>
@@ -345,10 +345,12 @@ $list_view
 				$('td:eq(2)', nRow).html('<div class="size14 weight text-center">'+purchase_type+'</div>');
 
 				var require_quotation = "";
-				if (aData[2] != null && aData[2] != "") {
-					require_quotation = aData[2];
+				if (aData[2] === 'Y') {
+					require_quotation ='<span class="text-success"><i class="bi bi-check-circle"></i></span>';
+				} else if (aData[2] === 'N') {
+					require_quotation = '<span class="text-danger"><i class="bi bi-x-circle"></i></span>';
 				}
-				$('td:eq(3)', nRow).html('<div class="size14 weight text-center">'+require_quotation+'</div>');
+				$('td:eq(3)', nRow).html('<div class="size14 text-center">'+require_quotation+'</div>');
 
 				var requirement_description = "";
 				if (aData[3] != null && aData[3] != "") {
@@ -370,17 +372,17 @@ $list_view
 
 				var order_returned = '';
 				if (aData[6] === 'Y') {
-					order_returned = '<span class="text-success"><i class="bi bi-check-circle"></i> 是</span>';
+					order_returned = '<span class="text-success"><i class="bi bi-check-circle"></i></span>';
 				} else if (aData[6] === 'N') {
-					order_returned = '<span class="text-danger"><i class="bi bi-x-circle"></i> 否</span>';
+					order_returned = '<span class="text-danger"><i class="bi bi-x-circle"></i></span>';
 				}
 				$('td:eq(7)', nRow).html('<div class="size14 text-center">'+order_returned+'</div>');
 
 				var delivered = '';
 				if (aData[7] === 'Y') {
-					delivered = '<span class="text-success">是</span>';
+					delivered = '<span class="text-success"><i class="bi bi-check-circle"></i></span>';
 				} else if (aData[7] === 'N') {
-					delivered = '<span class="text-danger">否</span>';
+					delivered = '<span class="text-danger"><i class="bi bi-x-circle"></i></span>';
 				}
 				$('td:eq(8)', nRow).html('<div class="size14 text-center">'+delivered+'</div>');
 
@@ -389,7 +391,7 @@ $list_view
 				var url1 = "openfancybox_edit('/index.php?ch=edit&material_no="+aData[0]+"&fm=$fm',1200,'96%','');";
 				var mdel = "myDel("+aData[0]+",'$site_db');";
 				show_btn = '<div class="btn-group text-nowrap">'
-						+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+url1+'" title="修改"><i class="bi bi-pencil-square"></i></button>'
+						+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+url1+'" title="編輯"><i class="bi bi-pencil-square"></i></button>'
 						+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+mdel+'" title="刪除"><i class="bi bi-trash"></i></button>'
 						+ '</div>';
 				

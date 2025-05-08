@@ -28,7 +28,7 @@ if (isset($_GET['sid']))
 	$ch = empty($_GET['ch']) ? 'default' : $_GET['ch'];
 	switch($ch) {
 		case 'add':
-			$title = "新增資料";
+			$title = "新增採購單";
 			$sid = "view01";
 			$modal = $m_location."/sub_modal/project/func09/purchaseorder_ms/purchaseorder_add.php";
 			include $modal;
@@ -36,9 +36,18 @@ if (isset($_GET['sid']))
 			$smarty->assign('xajax_javascript', $xajax->getJavascript('/xajax/'));
 			break;
 		case 'edit':
-			$title = "資料編輯";
+			$title = "編輯採購單";
 			$sid = "view01";
 			$modal = $m_location."/sub_modal/project/func09/purchaseorder_ms/purchaseorder_modify.php";
+			include $modal;
+			$smarty->assign('show_center',$show_center);
+			$smarty->assign('xajax_javascript', $xajax->getJavascript('/xajax/'));
+			break;
+		case 'ch_employee':
+			$title = "員工名單";
+			if (empty($sid))
+				$sid = "view01";
+			$modal = $m_location."/sub_modal/project/func09/purchaseorder_ms/ch_employee.php";
 			include $modal;
 			$smarty->assign('show_center',$show_center);
 			$smarty->assign('xajax_javascript', $xajax->getJavascript('/xajax/'));

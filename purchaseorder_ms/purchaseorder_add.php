@@ -86,21 +86,40 @@ function processform($aFormValues){
 	$delivered = (trim($aFormValues['delivered']) === "Y") ? "Y" : "N";
 	$company_id = trim($aFormValues['company_id']);
 	$location = trim($aFormValues['location']);
-	$purchase_order_id = "TEST-2";
-	// $mDB = "";
-	// $mDB = new MywebDB();
-	// $Qry="select * from contract where contract_id='$contract_id' ";
-	// $mDB->query($Qry);
-	// if ($mDB->rowCount() > 0) {
-	// 	$row=$mDB->fetchRow(2);
-	// 	$contract_id = $row['contract_id'];
-	// 	$contract_abbreviation = $row['contract_abbreviation'];
-	// }
-	// if($big_fixed == "Y"){
-	// 	$purchase_order_id = $contract_abbreviation ."_RF_". $employee_id ."_". date("md");
-	// }else{
-	// 	$purchase_order_id = $contract_abbreviation ."_". $employee_id . date("md");
-	// }
+	$purchase_order_id ="123123";
+
+	// 採購編號生成
+	$mDB = "";
+	$mDB = new MywebDB();
+	$Qry="select * from contract where contract_id='$contract_id' ";
+	$mDB->query($Qry);
+	if ($mDB->rowCount() > 0) {
+		$row=$mDB->fetchRow(2);
+		$contract_id = $row['contract_id'];
+		$contract_code = $row['contract_code'];
+		$roc_year = date("Y") - 1911;
+		$step_purchase_order_id = $contract_code . "_" . sprintf("%03d", $roc_year) . date("md") . "_";
+	}
+		
+	$mDB2 = "";
+	$mDB2 = new MywebDB();
+	$Qry2 = "SELECT purchase_order_id 
+         FROM purchaseorder 
+         WHERE LEFT(purchase_order_id, LENGTH(purchase_order_id) - 2) = 'BC_1140509_'
+         ORDER BY purchase_order_id DESC 
+         LIMIT 1";
+	$mDB2->query($Qry2);
+	if ($mDB2->rowCount() > 0) {
+        $row3 = $mDB2->fetchRow(2);
+        $last_id = $row3['purchase_order_id'];
+        $last_sn = substr($last_id, -2); // 取最後兩碼流水號
+        $new_sn = sprintf("%02d", intval($last_sn) + 1); // 加1並補零
+    } else {
+        $new_sn = "01"; // 第一筆從 01 開始
+    }
+
+	// 組成新的採購單號
+    $purchase_order_id = $step_purchase_order_id . $new_sn;
 
 
 	//存入實體資料庫中
@@ -437,71 +456,80 @@ $style_css
 								</div> 
 							</div> 
 						</div>
-						<div class="row d-flex flex-wrap gap-2">
+						<div class="row d-flex flex-wrap gap-2 mt-3">
 							<div class="field_div1 gap-2">採購事項確認:</div> 
-							<div class="col-lg-1 col-sm-1 col-md-1 mt-2 mb-2 ">
-									<div class="field_div2 ">
+							<div class="col-lg-2 col-sm-2 col-md-2 mt-2 mb-2 ">
+									<div class="field_div3 ">
 										<input type="checkbox" class="inputtext" name="big_fixed" id="big_fixed" value="Y" >
-										<label for="big_fixed" class="red">大修</label>
+										<label for="big_fixed">大修</label>
 									</div> 
 							</div>
-							<div class="col-lg-1 col-sm-1 col-md-1 mt-2 mb-2 ">
-									<div class="field_div2 ">
+							<div class="col-lg-2 col-sm-2 col-md-2 mt-2 mb-2 ">
+									<div class="field_div3 ">
 										<input type="checkbox" class="inputtext" name="require_quotation" id="require_quotation" value="Y" >
-										<label for="require_quotation" >報價</label>
+										<label for="require_quotation" >已報價</label>
 									</div> 
 							</div>
-							<div class="col-lg-1 col-sm-1 col-md-1 mt-2 mb-2 ">
-									<div class="field_div2 ">
+							<div class="col-lg-2 col-sm-2 col-md-2 mt-2 mb-2 ">
+									<div class="field_div3 ">
 										<input type="checkbox" class="inputtext" name="has_order" id="has_order" value="Y" >
-										<label for="has_order" >訂單</label>
+										<label for="has_order" >有訂單</label>
 									</div> 
 							</div>
-							<div class="col-lg-1 col-sm-1 col-md-12 mt-2 mb-2 ">
-									<div class="field_div2 ">
+							<div class="col-lg-2 col-sm-2 col-md-2 mt-2 mb-2 ">
+									<div class="field_div3 ">
 										<input type="checkbox" class="inputtext" name="order_returned" id="order_returned" value="Y" >
-										<label for="order_returned" >訂單回傳</label>
+										<label for="order_returned" >訂單已回傳</label>
 									</div> 
 							</div>
-							<div class="col-lg-1 col-sm-1 col-md-1 mt-2 mb-2 ms-4">
-									<div class="field_div2 ">
+							<div class="col-lg-2 col-sm-2 col-md-2 mt-2 mb-2">
+									<div class="field_div3 ">
 										<input type="checkbox" class="inputtext" name="delivered" id="delivered" value="Y" >
-										<label for="delivered" >到貨</label>
+										<label for="delivered" >已到貨</label>
 									</div> 
 							</div>
 						</div>
-						<div class="row">
-							<div class="col-lg-6 col-sm-12 col-md-12">
-								<div class="field_div1">到貨日期:</div> 
-								<div class="field_div3">
-									<div class="input-group" id="delivery_date"  style="width:100%;max-width:250px;">
+						<!-- 到貨日期區塊，初始隱藏 -->
+								<div class="row" id="delivery_date_section" style="display: none;">
+								<div class="col-lg-6 col-sm-12 col-md-12">
+									<div class="field_div1">到貨日期:</div> 
+									<div class="field_div3">
+									<div class="input-group" id="delivery_date" style="width:100%;max-width:250px;">
 										<input type="text" class="form-control" name="delivery_date" placeholder="請輸入入庫日期" aria-describedby="delivery_date" value="$default_day">
-										<button class="btn btn-outline-secondary input-group-append input-group-addon" type="button" data-target="#delivery_date" data-toggle="datetimepicker"><i class="bi bi-calendar"></i></button>
+										<button class="btn btn-outline-secondary input-group-append input-group-addon" type="button" data-target="#delivery_date" data-toggle="datetimepicker">
+										<i class="bi bi-calendar"></i>
+										</button>
 									</div>
 									<script type="text/javascript">
 										$(function () {
-											$('#delivery_date').datetimepicker({
-												locale: 'zh-tw'
-												,format:"YYYY-MM-DD"
-												,allowInputToggle: true
-											});
+										$('#delivery_date').datetimepicker({
+											locale: 'zh-tw',
+											format: "YYYY-MM-DD",
+											allowInputToggle: true
+										});
 										});
 									</script>
+									</div> 
 								</div> 
-							</div> 
-						</div>
+								</div>
+
+								<!-- 監聽checkbox:到貨 是否打勾-->
+								<script>
+								$(document).ready(function() {
+									$('#delivered').change(function() {
+									if ($(this).is(':checked')) {
+										$('#delivery_date_section').slideDown();
+									} else {
+										$('#delivery_date_section').slideUp();
+									}
+									});
+								});
+								</script>
 					</div>
 				</div>
 
 				<div class="row">
-							<div class="col-lg-12 col-sm-12 col-md-12">
-								<div class="field_div1">入庫單號:</div> 
-								<div class="field_div3">
-									<input type="text" class="inputtext" id="purchase_order_id" name="purchase_order_id" size="20" maxlength="20" style="width:100%;max-width:250px;"/>
-									<button type="button" class="btn btn-success" onclick="xajax_getno();"><i class="bi bi-recycle"></i>&nbsp;系統取號</button>
-								</div> 
-							</div> 
-						</div>
+						
 				<div class="form_btn_div mt-5">
 					<input type="hidden" name="fm" value="$fm" />
 					<input type="hidden" name="site_db" value="$site_db" />

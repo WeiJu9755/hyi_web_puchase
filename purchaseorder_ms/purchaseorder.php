@@ -235,7 +235,7 @@ EOT;
 	$show_modify_btn = <<<EOT
 <div class="text-center my-2">
 	<div class="btn-group me-2 mb-2" role="group">
-		<button type="button" class="btn btn-danger text-nowrap" onclick="openfancybox_edit('/index.php?ch=add&t=$t&fm=$fm',1200,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增採購單</button>
+		<button type="button" class="btn btn-danger text-nowrap" onclick="openfancybox_edit('/index.php?ch=add&t=$t&fm=$fm',1200,'90%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增採購單</button>
 		<button type="button" class="btn btn-success text-nowrap" onclick="myDraw();"><i class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
 	</div>
 </div>
@@ -388,7 +388,7 @@ $list_view
 
 
 				var show_btn = '';
-				var url1 = "openfancybox_edit('/index.php?ch=edit&material_no="+aData[0]+"&fm=$fm',1200,'96%','');";
+				var url1 = "openfancybox_edit('/index.php?ch=edit&purchase_order_id="+aData[0]+"&fm=$fm',1800,'100%','');";
 				var mdel = "myDel("+aData[0]+",'$site_db');";
 				show_btn = '<div class="btn-group text-nowrap">'
 						+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+url1+'" title="編輯"><i class="bi bi-pencil-square"></i></button>'

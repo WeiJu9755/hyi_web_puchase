@@ -528,16 +528,20 @@ $style_css
 					</div>
 				</div>
 
-				<div class="row">
-						
-				<div class="form_btn_div mt-5">
-					<input type="hidden" name="fm" value="$fm" />
-					<input type="hidden" name="site_db" value="$site_db" />
-					<input type="hidden" name="templates" value="$templates" />
-					<input type="hidden" name="employee_id" value="$employee_id" />
-					<button class="btn btn-primary" type="button" onclick="CheckValue(this.form);" style="padding: 10px;margin-right: 10px;"><i class="bi bi-check-lg green"></i>&nbsp;確定新增</button>
-					<button class="btn btn-danger" type="button" onclick="parent.myDraw();parent.$.fancybox.close();" style="padding: 10px;"><i class="bi bi-power"></i>&nbsp;關閉</button>
-				</div>
+
+					<div class="form_btn_div mt-5 d-flex justify-content-center">
+						<input type="hidden" name="fm" value="$fm" />
+						<input type="hidden" name="site_db" value="$site_db" />
+						<input type="hidden" name="templates" value="$templates" />
+						<input type="hidden" name="employee_id" value="$employee_id" />
+						<button class="btn btn-primary" type="button" onclick="CheckValue(this.form);" style="padding: 10px; margin: 0 10px;">
+							<i class="bi bi-check-lg green"></i>&nbsp;確定新增
+						</button>
+						<button class="btn btn-danger" type="button" onclick="parent.myDraw();parent.$.fancybox.close();" style="padding: 10px; margin: 0 10px;">
+							<i class="bi bi-power"></i>&nbsp;關閉
+						</button>
+					</div>
+
 			</form>
 		</div>
 	</div>

@@ -26,9 +26,9 @@ function processform($aFormValues){
 	$objResponse = new xajaxResponse();
 	
 	$web_id				= trim($aFormValues['web_id']);
-	$stock_in_id		= trim($aFormValues['stock_in_id']);
+	$purchase_order_id		= trim($aFormValues['purchase_order_id']);
 	
-	if (trim($aFormValues['stock_in_date']) == "") {
+	if (trim($aFormValues['order_date']) == "") {
 		$objResponse->script("jAlert('警示', '請輸入入庫日期', 'red', '', 2000);");
 		return $objResponse;
 		exit;
@@ -58,8 +58,8 @@ function SaveValue($aFormValues){
 	
 		//進行存檔動作
 		$site_db				= trim($aFormValues['site_db']);
-		$stock_in_id			= trim($aFormValues['stock_in_id']);
-		$stock_in_date			= trim($aFormValues['stock_in_date']);
+		$purchase_order_id			= trim($aFormValues['purchase_order_id']);
+		$order_date			= trim($aFormValues['order_date']);
 		$stock_in_type			= trim($aFormValues['stock_in_type']);
 		$source_code			= trim($aFormValues['source_code']);
 		$supplier_id			= trim($aFormValues['supplier_id']);
@@ -74,7 +74,7 @@ function SaveValue($aFormValues){
 		$mDB = new MywebDB();
 
 		$Qry="UPDATE stock_in set
-				 stock_in_date		= '$stock_in_date'
+				 order_date			= '$order_date'
 				,stock_in_type		= '$stock_in_type'
 				,source_code		= '$source_code'
 				,supplier_id		= '$supplier_id'
@@ -82,7 +82,7 @@ function SaveValue($aFormValues){
 				,handler_id			= '$handler_id'
 				,remarks			= '$remarks'
 				,last_modify		= now()
-				where stock_in_id = '$stock_in_id'";
+				where purchase_order_id = '$purchase_order_id'";
 				
 		$mDB->query($Qry);
         $mDB->remove();
@@ -117,7 +117,7 @@ $xajax->processRequest();
 
 
 $fm = $_GET['fm'];
-$stock_in_id = $_GET['stock_in_id'];
+$purchase_order_id = $_GET['purchase_order_id'];
 
 $mess_title = $title;
 
@@ -127,25 +127,27 @@ $mess_title = $title;
 $mDB = "";
 $mDB = new MywebDB();
 
-$Qry="SELECT a.*,b.employee_name FROM stock_in a
+$Qry="SELECT a.*,b.employee_name,c.supplier_name,d.contract_caption FROM purchaseorder a
 LEFT JOIN employee b ON b.employee_id = a.handler_id
-WHERE a.stock_in_id = '$stock_in_id'";
+LEFT JOIN supplier c ON c.supplier_id = a.company_id
+LEFT JOIN contract d ON d.contract_id = a.contract_id";
 $mDB->query($Qry);
 $total = $mDB->rowCount();
 if ($total > 0) {
     //已找到符合資料
 	$row=$mDB->fetchRow(2);
-	$stock_in_id = $row['stock_in_id'];
-	$stock_in_date = $row['stock_in_date'];
-	$stock_in_type = $row['stock_in_type'];
-	$source_code = $row['source_code'];
-	$supplier_id = $row['supplier_id'];
-	$warehouse = $row['warehouse'];
+	$purchase_order_id = $row['purchase_order_id'];
+	$contract_id = $row['contract_id'];
+	$contract_caption = $row['contract_caption'];
 	$handler_id = $row['handler_id'];
+	$purchase_type = $row['purchase_type'];
+	$order_date = $row['order_date'];
+	$delivery_date = $row['delivery_date'];
+	$company_id = $row['company_id'];
+	$company_name = $row['supplier_name'];
+	$location = $row['location'];
+	$makeby = $row['makeby'];
 	$employee_name = $row['employee_name'];
-	$status = $row['status'];
-	$remarks = $row['remarks'];
-	$last_modify = $row['last_modify'];
   
 }
 
@@ -179,6 +181,7 @@ if ($mDB->rowCount() > 0) {
 $Qry="select supplier_id,supplier_name from supplier order by auto_seq";
 $mDB->query($Qry);
 $select_supplier = "";
+$select_supplier .= "<option value=\"$company_id\" ".mySelect($company_id,$company_id).">$company_id $company_name</option>";
 $select_supplier .= "<option></option>";
 if ($mDB->rowCount() > 0) {
 	while ($row=$mDB->fetchRow(2)) {
@@ -281,7 +284,7 @@ include $m_location."/sub_modal/project/func04/stock_in_ms/stock_in_detail.php";
 
 $show_fellow_btn=<<<EOT
 <div class="btn-group" role="group">
-	<button type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="openfancybox_edit('/index.php?ch=stock_in_detail_add&stock_in_id=$stock_in_id&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
+	<button type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="openfancybox_edit('/index.php?ch=stock_in_detail_add&purchase_order_id=$purchase_order_id&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
 	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="stock_in_detail_myDraw();"><i class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
 </div>
 EOT; 
@@ -317,55 +320,33 @@ $style_css
 					<div class="container-fluid">
 						<div class="row">
 							<div class="col-lg-12 col-sm-12 col-md-12">
-								<div class="field_div1">入庫單號:</div>
-								<div class="field_div2"><div class="blue weight mt-2">$stock_in_id</div></div>
+								<div class="field_div1">採購編號:</div>
+								<div class="field_div2"><div class="blue weight mt-2">$purchase_order_id</div></div>
 							</div> 
 						</div>
 					</div>
 					<div class="container-fluid">
 						<div class="row">
 							<div class="col-lg-6 col-sm-12 col-md-12">
-								<div class="field_div1">入庫日期:</div> 
-								<div class="field_div3">
-									<div class="input-group" id="stock_in_date"  style="width:100%;max-width:250px;">
-										<input type="text" class="form-control" name="stock_in_date" placeholder="請輸入入庫日期" aria-describedby="stock_in_date" value="$stock_in_date">
-										<button class="btn btn-outline-secondary input-group-append input-group-addon" type="button" data-target="#stock_in_date" data-toggle="datetimepicker"><i class="bi bi-calendar"></i></button>
-									</div>
-									<script type="text/javascript">
-										$(function () {
-											$('#stock_in_date').datetimepicker({
-												locale: 'zh-tw'
-												,format:"YYYY-MM-DD"
-												,allowInputToggle: true
-											});
-										});
-									</script>
+								<div class="field_div1">採購日期:</div> 
+								<div class="field_div3 mt-2">								
+										$order_date
 								</div> 
 							</div> 
 							<div class="col-lg-6 col-sm-12 col-md-12">
-								<div class="field_div1">入庫類型:</div> 
+								<div class="field_div1">合約名稱:</div> 
 								<div class="field_div3">
-									<select id="stock_in_type" name="stock_in_type" placeholder="請選擇入庫類型" style="width:100%;max-width:250px;">
-										$select_stock_in_type
-									</select>
+									<div class="blue weight mt-2">$contract_caption</div>
 								</div> 
 							</div> 
 						</div>
 					</div>
 					<div class="container-fluid">
 						<div class="row">
-							<div class="col-lg-6 col-sm-12 col-md-12">
-								<div class="field_div1">物料來源:</div> 
-								<div class="field_div3">
-									<select id="source_code" name="source_code" placeholder="請選擇物料來源" style="width:100%;max-width:250px;">
-										$select_source_code
-									</select>
-								</div> 
-							</div> 
 							<div class="col-lg-6 col-sm-12 col-md-12">
 								<div class="field_div1">供應商:</div> 
 								<div class="field_div3">
-									<select id="supplier_id" name="supplier_id" placeholder="請選擇供應商" style="width:100%;max-width:350px;">
+									<select id="supplier_id" name="supplier_id" placeholder="請選擇供應商" style="width:100%;max-width:350px;" value="$company_id">
 										$select_supplier
 									</select>
 								</div> 
@@ -383,24 +364,21 @@ $style_css
 								</div> 
 							</div> 
 							<div class="col-lg-6 col-sm-12 col-md-12">
-								<div class="field_div1">倉庫別:</div> 
-								<div class="field_div3">
-									<select id="warehouse" name="warehouse" placeholder="請選擇倉庫別" style="width:100%;max-width:250px;">
-										$select_warehouse
-									</select>
-								</div> 
+								
 							</div> 
 						</div>
 						<div class="row">
 							<div class="col-lg-6 col-sm-12 col-md-12">
-								<div class="field_div1">備註:</div> 
+								<div class="field_div1">需求描述:</div> 
 								<div class="field_div3">
 									<textarea class="inputtext w-100 p-3" id="remarks" name="remarks" cols="80" rows="1" style="max-width: 500px;" onchange="setEdit();">$remarks</textarea>
 								</div> 
 							</div> 
-							<div class="col-lg-6 col-sm-12 col-md-12">
-								<div class="field_div1">狀態:</div> 
-								<div class="field_div3 pt-3">$status</div> 
+							<div class="col-lg-12 col-sm-12 col-md-12">
+								<div class="field_div1">施作地點:</div> 
+								<div class="field_div2">
+									<input type="text" class="inputtext" name="location" id="location" size="50" placeholder="請輸入施作地點" maxlength="50" style="width:100%;max-width:250px;"/>
+								</div> 
 							</div> 
 						</div>
 					</div>
@@ -409,7 +387,7 @@ $style_css
 					<div>
 						<input type="hidden" name="fm" value="$fm" />
 						<input type="hidden" name="site_db" value="$site_db" />
-						<input type="hidden" name="stock_in_id" value="$stock_in_id" />
+						<input type="hidden" name="purchase_order_id" value="$purchase_order_id" />
 						<input type="hidden" name="memberID" value="$memberID" />
 					</div>
 				</div>
@@ -457,7 +435,7 @@ $(document).ready(function() {
 $(document).ready(async function() {
 	//等待其他資源載入完成，此方式適用大部份瀏覽器
 	await new Promise(resolve => setTimeout(resolve, 100));
-	$('#stock_in_date').focus();
+	$('#order_date').focus();
 });
 
 </script>

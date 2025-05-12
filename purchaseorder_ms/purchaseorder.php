@@ -20,7 +20,7 @@ if (!($detect->isMobile() && !$detect->isTablet())) {
 $xajax = new xajax();
 
 $xajax->registerFunction("DeleteRow");
-function DeleteRow($auto_seq, $site_db)
+function DeleteRow($purchase_order_id)
 {
 
 	$objResponse = new xajaxResponse();
@@ -29,7 +29,7 @@ function DeleteRow($auto_seq, $site_db)
 	$mDB = new MywebDB();
 
 	//刪除主資料
-	$Qry = "delete from purchaseorder where auto_seq = '$auto_seq'";
+	$Qry = "delete from purchaseorder where purchase_order_id = '$purchase_order_id'";
 	$mDB->query($Qry);
 
 	$mDB->remove();
@@ -389,7 +389,7 @@ $list_view
 
 				var show_btn = '';
 				var url1 = "openfancybox_edit('/index.php?ch=edit&purchase_order_id="+aData[0]+"&fm=$fm',1800,'100%','');";
-				var mdel = "myDel("+aData[0]+",'$site_db');";
+				var mdel = "myDel('" + aData[0] + "');";
 				show_btn = '<div class="btn-group text-nowrap">'
 						+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+url1+'" title="編輯"><i class="bi bi-pencil-square"></i></button>'
 						+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+mdel+'" title="刪除"><i class="bi bi-trash"></i></button>'
@@ -407,14 +407,14 @@ $list_view
 		
 	} );
 	
-var myDel = function(auto_seq,site_db){				
+var myDel = function(purchase_order_id){				
 	art.dialog({
 		lock: true,
 		icon: 'confirm',
 		skin: 'default',
 		content: '您確定要刪除此筆資料嗎?',
 		yesFn: function(){
-			xajax_DeleteRow(auto_seq,site_db);
+			xajax_DeleteRow(purchase_order_id);
 			return true;
 		},
 		noFn: function(){

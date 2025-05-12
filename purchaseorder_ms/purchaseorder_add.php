@@ -70,23 +70,23 @@ function processform($aFormValues){
 	$fm					= trim($aFormValues['fm']);
 	$site_db			= trim($aFormValues['site_db']);
 	$templates			= trim($aFormValues['templates']);
-	$handler_id		= trim($aFormValues['handler_id']);
-	$big_fixed = (trim($aFormValues['big_fixed']) === "Y") ? "Y" : "N";
-	$purchase_type	= trim($aFormValues['purchase_type']);
-	$contract_id = trim($aFormValues['contract_id']);
-	$contract_seq = trim($aFormValues['contract_seq']);
-	$contract_type = trim($aFormValues['contract_type']);
-	$require_quotation = (trim($aFormValues['require_quotation']) === "Y") ? "Y" : "N";
-	$makeby = trim($aFormValues['makeby']);
+	$handler_id			= trim($aFormValues['handler_id']);
+	$big_fixed 			= (trim($aFormValues['big_fixed']) === "Y") ? "Y" : "N";
+	$purchase_type		= trim($aFormValues['purchase_type']);
+	$contract_id 		= trim($aFormValues['contract_id']);
+	$contract_seq 		= trim($aFormValues['contract_seq']);
+	$contract_type 		= trim($aFormValues['contract_type']);
+	$require_quotation 	= (trim($aFormValues['require_quotation']) === "Y") ? "Y" : "N";
+	$makeby 			= trim($aFormValues['makeby']);
 	$requirement_description = trim($aFormValues['requirement_description']);
-	$order_date = trim($aFormValues['order_date']);
-	$delivery_date = trim($aFormValues['delivery_date']);
-	$has_order = (trim($aFormValues['has_order']) === "Y") ? "Y" : "N";
-	$order_returned = (trim($aFormValues['order_returned']) === "Y") ? "Y" : "N";
-	$delivered = (trim($aFormValues['delivered']) === "Y") ? "Y" : "N";
-	$company_id = trim($aFormValues['company_id']);
-	$location = trim($aFormValues['location']);
-	$purchase_order_id ="123123";
+	$order_date 		= trim($aFormValues['order_date']);
+	$delivery_date 		= trim($aFormValues['delivery_date']);
+	$has_order 			= (trim($aFormValues['has_order']) === "Y") ? "Y" : "N";
+	$order_returned 	= (trim($aFormValues['order_returned']) === "Y") ? "Y" : "N";
+	$delivered 			= (trim($aFormValues['delivered']) === "Y") ? "Y" : "N";
+	$company_id 		= trim($aFormValues['company_id']);
+	$location 			= trim($aFormValues['location']);
+	$purchase_order_id 	= "";
 
 	// 採購編號生成
 	$mDB = "";
@@ -95,7 +95,6 @@ function processform($aFormValues){
 	$mDB->query($Qry);
 	if ($mDB->rowCount() > 0) {
 		$row=$mDB->fetchRow(2);
-		$contract_id = $row['contract_id'];
 		$contract_code = $row['contract_code'];
 		$roc_year = date("Y") - 1911;
 		$step_purchase_order_id = $contract_code . "_" . sprintf("%03d", $roc_year) . date("md") . "_";
@@ -105,7 +104,7 @@ function processform($aFormValues){
 	$mDB2 = new MywebDB();
 	$Qry2 = "SELECT purchase_order_id 
          FROM purchaseorder 
-         WHERE LEFT(purchase_order_id, LENGTH(purchase_order_id) - 2) = 'BC_1140509_'
+         WHERE LEFT(purchase_order_id, LENGTH(purchase_order_id) - 2) = '$step_purchase_order_id'
          ORDER BY purchase_order_id DESC 
          LIMIT 1";
 	$mDB2->query($Qry2);
@@ -229,23 +228,6 @@ $mDB = "";
 $mDB = new MywebDB();
 
 
-/*
-//載入廠商
-$Qry="SELECT supplier_id,supplier_name FROM supplier ORDER BY supplier_id";
-$mDB->query($Qry);
-
-$select_supplier = "";
-$select_supplier .= "<option></option>";
-
-if ($mDB->rowCount() > 0) {
-	while ($row=$mDB->fetchRow(2)) {
-		$ch_supplier_id = $row['supplier_id'];
-		$ch_supplier_name = $row['supplier_name'];
-		$select_supplier .= "<option value='$ch_supplier_id'>{$ch_supplier_id} {$ch_supplier_name}</option>";
-	}
-}
-*/
-
 //載入合約
 
 $Qry="SELECT auto_seq,contract_id,contract_caption FROM contract ORDER BY auto_seq";
@@ -272,8 +254,7 @@ if ($mDB->rowCount() > 0) {
 	while ($row=$mDB->fetchRow(2)) {
 		$supplier_id = $row['supplier_id'];
 		$supplier_name = $row['supplier_name'];
-		$short_name = $row['short_name'];
-		$select_supplier .= "<option value=\"$supplier_id\" ".mySelect($supplier_id,"").">$supplier_id  $supplier_name</option>";
+		$select_supplier .= "<option value=\"$supplier_id\" ".mySelect($supplier_id,"").">$supplier_id $supplier_name</option>";
 	}
 }
 
@@ -440,7 +421,7 @@ $style_css
 						</div>
 						<div class="row">
 							<div class="col-lg-12 col-sm-12 col-md-12">
-								<div class="field_div1">採購廠商:</div> 
+								<div class="field_div1">供應商:</div> 
 								<div class="field_div2">
 									<select id="company_id" name="company_id" placeholder="請選擇廠商" style="width:100%;max-width:250px;">
 										$select_supplier
@@ -464,6 +445,7 @@ $style_css
 										<label for="big_fixed">大修</label>
 									</div> 
 							</div>
+							    <!--
 							<div class="col-lg-2 col-sm-2 col-md-2 mt-2 mb-2 ">
 									<div class="field_div3 ">
 										<input type="checkbox" class="inputtext" name="require_quotation" id="require_quotation" value="Y" >
@@ -482,6 +464,7 @@ $style_css
 										<label for="order_returned" >訂單已回傳</label>
 									</div> 
 							</div>
+							-->
 							<div class="col-lg-2 col-sm-2 col-md-2 mt-2 mb-2">
 									<div class="field_div3 ">
 										<input type="checkbox" class="inputtext" name="delivered" id="delivered" value="Y" >

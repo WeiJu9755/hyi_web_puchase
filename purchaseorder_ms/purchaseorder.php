@@ -263,14 +263,12 @@ EOT;
 	<table class="table table-bordered border-dark w-100" id="db_table" style="min-width:1000px;">
 		<thead class="table-light border-dark">
 			<tr style="border-bottom: 1px solid #000;">
-				<th scope="col" class="text-center text-nowrap" style="width:5%;">NO.</th>
+
 				<th scope="col" class="text-center" style="width:7%;">採購單號</th>
 				<th scope="col" class="text-center" style="width:7%;">採購性質</th>
-				<th scope="col" class="text-center" style="width:7%;">是否報價</th>
 				<th scope="col" class="text-center" style="width:25%;">需求說明</th>
 				<th scope="col" class="text-center" style="width:7%;">訂購日期</th>
 				<th scope="col" class="text-center" style="width:7%;">交貨日期</th>
-				<th scope="col" class="text-center" style="width:7%;">訂單回傳</th>
 				<th scope="col" class="text-center" style="width:7%;">是否到貨</th>
 				<th scope="col" class="text-center text-nowrap" style="width:7%;">處理</th>
 			</tr>
@@ -328,74 +326,62 @@ $list_view
     		},
 			"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
 
-				
-				var serial_number = iDisplayIndex + 1;
-				$('td:eq(0)', nRow).html('<div class="size14 text-center">'+serial_number+'</div>');
-
 				var purchase_order_id = "";
 				if (aData[0] != null && aData[0] != "") {
 					purchase_order_id = aData[0];
 				}
-				$('td:eq(1)', nRow).html('<div class="size14 weight blue02 text-center">'+purchase_order_id+'</div>');
+				$('td:eq(0)', nRow).html('<div class="size14 weight blue02 text-center">'+purchase_order_id+'</div>');
 
 				var purchase_type = "";
 				if (aData[1] != null && aData[1] != "") {
 					purchase_type = aData[1];
 				}
-				$('td:eq(2)', nRow).html('<div class="size14 weight text-center">'+purchase_type+'</div>');
-
-				var require_quotation = "";
-				if (aData[2] === 'Y') {
-					require_quotation ='<span class="text-success"><i class="bi bi-check-circle"></i></span>';
-				} else if (aData[2] === 'N') {
-					require_quotation = '<span class="text-danger"><i class="bi bi-x-circle"></i></span>';
-				}
-				$('td:eq(3)', nRow).html('<div class="size14 text-center">'+require_quotation+'</div>');
+				$('td:eq(1)', nRow).html('<div class="size14 weight text-center">'+purchase_type+'</div>');
 
 				var requirement_description = "";
-				if (aData[3] != null && aData[3] != "") {
-					requirement_description = aData[3];
+				if (aData[2] != null && aData[2] != "") {
+					requirement_description = aData[2];
 				}
-				$('td:eq(4)', nRow).html('<div class="size14 text-start">'+requirement_description+'</div>');
+				$('td:eq(2)', nRow).html('<div class="size14 text-start">'+requirement_description+'</div>');
 
 				var order_date = '';
-				if (aData[4] != null && aData[4] != "" ) {
-					order_date = aData[4];
+				if (aData[3] != null && aData[3] != "" ) {
+					order_date = aData[3];
 				}
-				$('td:eq(5)', nRow).html('<div class="size14 text-center">'+order_date+'</div>');
+				$('td:eq(3)', nRow).html('<div class="size14 text-center">'+order_date+'</div>');
 
 				var delivery_date = '';
-				if (aData[5] != null && aData[5] != "") {
-					delivery_date = aData[5];
+				if (aData[4] != null && aData[4] != "") {
+					delivery_date = aData[4];
 				}
-				$('td:eq(6)', nRow).html('<div class="size14 text-center">'+delivery_date+'</div>');
-
-				var order_returned = '';
-				if (aData[6] === 'Y') {
-					order_returned = '<span class="text-success"><i class="bi bi-check-circle"></i></span>';
-				} else if (aData[6] === 'N') {
-					order_returned = '<span class="text-danger"><i class="bi bi-x-circle"></i></span>';
-				}
-				$('td:eq(7)', nRow).html('<div class="size14 text-center">'+order_returned+'</div>');
+				$('td:eq(4)', nRow).html('<div class="size14 text-center">'+delivery_date+'</div>');
 
 				var delivered = '';
-				if (aData[7] === 'Y') {
+				if (aData[5] === 'Y') {
 					delivered = '<span class="text-success"><i class="bi bi-check-circle"></i></span>';
-				} else if (aData[7] === 'N') {
+				} else if (aData[5] === 'N') {
 					delivered = '<span class="text-danger"><i class="bi bi-x-circle"></i></span>';
 				}
-				$('td:eq(8)', nRow).html('<div class="size14 text-center">'+delivered+'</div>');
+				$('td:eq(5)', nRow).html('<div class="size14 text-center">'+delivered+'</div>');
 
 
 				var show_btn = '';
+
 				var url1 = "openfancybox_edit('/index.php?ch=edit&purchase_order_id="+aData[0]+"&fm=$fm',1800,'100%','');";
+				var url3 = "openfancybox_edit('/index.php?tb=inventory&auto_seq="+aData[12]+"&project_id=$project_id&auth_id=$auth_id&fm=pjattach','96%','96%','myDraw();');";
+				var files_total = '<div class="d-flex justify-content-center align-items-center size12 text-center mt-2" id="files_total'+aData[12]+'"></div>';
+				xajax_returnValue('$web_id','$project_id','$auth_id',aData[12],'inventory');
+
+				$('td:eq(12)', nRow).html( '<a href="javascript:void(0);" onclick="'+url3+'" title="上傳檔案">'+files_total+'</a>' );
+
 				var mdel = "myDel('" + aData[0] + "');";
 				show_btn = '<div class="btn-group text-nowrap">'
 						+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+url1+'" title="編輯"><i class="bi bi-pencil-square"></i></button>'
+						+'<button type="button" class="btn btn-light" onclick="'+url3+'" title="上傳檔案"><i class="bi bi-file-arrow-up"></i></button>'
 						+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+mdel+'" title="刪除"><i class="bi bi-trash"></i></button>'
 						+ '</div>';
 				
-				$('td:eq(9)', nRow).html('<div class="text-center">'+show_btn+'</div>');
+				$('td:eq(6)', nRow).html('<div class="text-center">'+show_btn+'</div>');
 
 				return nRow;
 			}

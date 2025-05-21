@@ -42,27 +42,46 @@ function DeleteRow($purchase_order_id)
 }
 
 $xajax->registerFunction("returnValue");
-function returnValue($auto_seq, $team_id)
-{
+function returnValue($web_id,$project_id,$auth_id,$auto_seq,$tb){
 	$objResponse = new xajaxResponse();
+
 
 	$mDB = "";
 	$mDB = new MywebDB();
-	$Qry = "select auto_seq from team_member where team_id = '$team_id'";
+
+	//計算圖檔數量
+	$Qry="select file_id,caption,orderby from pjfiles_caption where web_id = '$web_id' and project_id = '$project_id' and auth_id = '$auth_id' and ftype = '$tb' and localpath = 'attach' and seq = '$auto_seq' order by orderby";
 	$mDB->query($Qry);
-	$employee_total = $mDB->rowCount();
+	$files_list = "";
+	$n = 0;
+	$file_size_total = 0;
+	
+	if ($mDB->rowCount() > 0) {
+		while ($row=$mDB->fetchRow(2)) {
+			$o_file = $row['file_id'];
+			$file_size = filesize($o_file);
+			$file_size_total += $file_size;
+			$n++;
+		}
+	}
+
 	$mDB->remove();
 
-	if ($employee_total > 0)
-		$show_employee_total = "<div class=\"inline size12\">人數：</div><div class=\"inline size12 red weight\">$employee_total</div>";
-	else
-		$show_employee_total = "";
+	$show_file_size_total = "<span style=\"white-space: pre;\">(".byteConvert($file_size_total).")</span>";
+	
+	if ($n > 0)
+		$show_files_total = "<i class=\"bi bi-file-earmark-medical blue01 me-1\" title=\"附檔\"></i><span class=\"badge text-bg-info me-1\">$n</span><span class=\"red weight me-2\">".$show_file_size_total."</span>";
+	else 
+		$show_files_total = "";
 
 
-	$objResponse->assign("employee_total" . $auto_seq, "innerHTML", $show_employee_total);
-
-	return $objResponse;
+	$objResponse->assign("files_total".$auto_seq,"innerHTML",$show_files_total);
+	
+    return $objResponse;
 }
+
+
+
 
 
 $xajax->processRequest();
@@ -270,6 +289,7 @@ EOT;
 				<th scope="col" class="text-center" style="width:7%;">訂購日期</th>
 				<th scope="col" class="text-center" style="width:7%;">交貨日期</th>
 				<th scope="col" class="text-center" style="width:7%;">是否到貨</th>
+				<th scope="col" class="text-center" style="width:7%;">附檔</th>
 				<th scope="col" class="text-center text-nowrap" style="width:7%;">處理</th>
 			</tr>
 		</thead>
@@ -365,14 +385,16 @@ $list_view
 				$('td:eq(5)', nRow).html('<div class="size14 text-center">'+delivered+'</div>');
 
 
+
+
 				var show_btn = '';
 
 				var url1 = "openfancybox_edit('/index.php?ch=edit&purchase_order_id="+aData[0]+"&fm=$fm',1800,'100%','');";
-				var url3 = "openfancybox_edit('/index.php?tb=inventory&auto_seq="+aData[12]+"&project_id=$project_id&auth_id=$auth_id&fm=pjattach','96%','96%','myDraw();');";
-				var files_total = '<div class="d-flex justify-content-center align-items-center size12 text-center mt-2" id="files_total'+aData[12]+'"></div>';
-				xajax_returnValue('$web_id','$project_id','$auth_id',aData[12],'inventory');
+				var url3 = "openfancybox_edit('/index.php?tb=purchaseorder&auto_seq="+aData[6]+"&project_id=$project_id&auth_id=$auth_id&fm=pjattach','96%','96%','myDraw();');";
+				var files_total = '<div class="d-flex justify-content-center align-items-center size12 text-center mt-2" id="files_total'+aData[6]+'"></div>';
+				xajax_returnValue('$web_id','$project_id','$auth_id',aData[6],'purchaseorder');
 
-				$('td:eq(12)', nRow).html( '<a href="javascript:void(0);" onclick="'+url3+'" title="上傳檔案">'+files_total+'</a>' );
+				$('td:eq(6)', nRow).html( '<a href="javascript:void(0);" onclick="'+url3+'" title="上傳檔案">'+files_total+'</a>' );
 
 				var mdel = "myDel('" + aData[0] + "');";
 				show_btn = '<div class="btn-group text-nowrap">'
@@ -381,7 +403,7 @@ $list_view
 						+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+mdel+'" title="刪除"><i class="bi bi-trash"></i></button>'
 						+ '</div>';
 				
-				$('td:eq(6)', nRow).html('<div class="text-center">'+show_btn+'</div>');
+				$('td:eq(7)', nRow).html('<div class="text-center">'+show_btn+'</div>');
 
 				return nRow;
 			}

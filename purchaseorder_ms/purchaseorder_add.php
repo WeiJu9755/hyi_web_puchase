@@ -76,13 +76,10 @@ function processform($aFormValues){
 	$contract_id 		= trim($aFormValues['contract_id']);
 	$contract_seq 		= trim($aFormValues['contract_seq']);
 	$contract_type 		= trim($aFormValues['contract_type']);
-	$require_quotation 	= (trim($aFormValues['require_quotation']) === "Y") ? "Y" : "N";
 	$makeby 			= trim($aFormValues['makeby']);
 	$requirement_description = trim($aFormValues['requirement_description']);
 	$order_date 		= trim($aFormValues['order_date']);
 	$delivery_date 		= trim($aFormValues['delivery_date']);
-	$has_order 			= (trim($aFormValues['has_order']) === "Y") ? "Y" : "N";
-	$order_returned 	= (trim($aFormValues['order_returned']) === "Y") ? "Y" : "N";
 	$delivered 			= (trim($aFormValues['delivered']) === "Y") ? "Y" : "N";
 	$company_id 		= trim($aFormValues['company_id']);
 	$location 			= trim($aFormValues['location']);
@@ -126,32 +123,41 @@ function processform($aFormValues){
 	$mDB = new MywebDB();
 	
 	$now = date("Y-m-d H:i:s");
-	$Qry = "INSERT INTO `purchaseorder` (
-		`purchase_order_id`, `handler_id`, `purchase_type`, `contract_id`, `contract_seq`,
-		`contract_type`, `big_fixed`, `require_quotation`, `makeby`, `requirement_description`,
-		`order_date`, `delivery_date`, `has_order`, `order_returned`, `delivered`,`company_id`, `location`,
-		`created_at`, `updated_at` 
-	  ) VALUES (
-		'$purchase_order_id',
-		'$handler_id', 
-		'$purchase_type', 
-		'$contract_id', 
-		'$contract_seq', 
-		'$contract_type', 
-		'$big_fixed',
-		'$require_quotation', 
-		'$makeby', 
-		'$requirement_description', 
-		'$order_date', 
-		'$delivery_date',
-		'$has_order', 
-		'$order_returned', 
-		'$delivered',
-		'$company_id',
-		'$location',
-		'$now',
-		'$now'
-	  )";
+	$Qry = " INSERT INTO `purchaseorder` (
+    `purchase_order_id`,
+    `handler_id`,
+    `purchase_type`,
+    `contract_id`,
+    `contract_seq`,
+    `contract_type`,
+    `big_fixed`,
+    `makeby`,
+    `requirement_description`,
+    `order_date`,
+    `delivery_date`,
+    `delivered`,
+    `company_id`,
+    `location`,
+    `created_at`,
+    `updated_at`
+) VALUES (
+    '$purchase_order_id',
+    '$handler_id',
+    '$purchase_type',
+    '$contract_id',
+    $contract_seq,
+    '$contract_type',
+    '$big_fixed',
+    '$makeby',
+    '$requirement_description',
+    '$order_date',
+    '$delivery_date',
+    '$delivered',
+    '$company_id',
+    '$location',
+    '$now',
+    '$now'
+)";
 	$mDB->query($Qry);
 
 	$mDB->remove();
@@ -445,26 +451,6 @@ $style_css
 										<label for="big_fixed">大修</label>
 									</div> 
 							</div>
-							    <!--
-							<div class="col-lg-2 col-sm-2 col-md-2 mt-2 mb-2 ">
-									<div class="field_div3 ">
-										<input type="checkbox" class="inputtext" name="require_quotation" id="require_quotation" value="Y" >
-										<label for="require_quotation" >已報價</label>
-									</div> 
-							</div>
-							<div class="col-lg-2 col-sm-2 col-md-2 mt-2 mb-2 ">
-									<div class="field_div3 ">
-										<input type="checkbox" class="inputtext" name="has_order" id="has_order" value="Y" >
-										<label for="has_order" >有訂單</label>
-									</div> 
-							</div>
-							<div class="col-lg-2 col-sm-2 col-md-2 mt-2 mb-2 ">
-									<div class="field_div3 ">
-										<input type="checkbox" class="inputtext" name="order_returned" id="order_returned" value="Y" >
-										<label for="order_returned" >訂單已回傳</label>
-									</div> 
-							</div>
-							-->
 							<div class="col-lg-2 col-sm-2 col-md-2 mt-2 mb-2">
 									<div class="field_div3 ">
 										<input type="checkbox" class="inputtext" name="delivered" id="delivered" value="Y" >

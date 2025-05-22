@@ -377,12 +377,25 @@ $list_view
 				$('td:eq(4)', nRow).html('<div class="size14 text-center">'+delivery_date+'</div>');
 
 				var delivered = '';
-				if (aData[5] === 'Y') {
-					delivered = '<span class="text-success"><i class="bi bi-check-circle"></i></span>';
-				} else if (aData[5] === 'N') {
-					delivered = '<span class="text-danger"><i class="bi bi-x-circle"></i></span>';
-				}
-				$('td:eq(5)', nRow).html('<div class="size14 text-center">'+delivered+'</div>');
+					if (aData[5] === 'Y') {
+						delivered = '<span class="text-success"><i class="bi bi-check-circle"></i></span>';
+					} else if (aData[5] === 'N') {
+						delivered = '<span class="delivered-toggle text-danger" data-status="N"><i class="bi bi-x-circle"></i></span>';
+					}
+					$('td:eq(5)', nRow).html('<div class="size14 text-center">' + delivered + '</div>');
+
+
+					$('td:eq(5) .delivered-toggle[data-status="N"]', nRow).on('click', function (event) {
+						const target = $(event.currentTarget); // 抓點擊的元素
+
+
+						target
+							.removeClass('text-danger delivered-toggle')
+							.addClass('text-success')
+							.removeAttr('data-status')
+							.html('<i class="bi bi-check-circle"></i>');
+
+					});
 
 
 

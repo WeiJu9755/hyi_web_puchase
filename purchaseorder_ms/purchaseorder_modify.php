@@ -26,26 +26,22 @@ function processform($aFormValues){
 	$objResponse = new xajaxResponse();
 	
 	$web_id				= trim($aFormValues['web_id']);
+	$order_date		= trim($aFormValues['order_date']);
 	$purchase_order_id		= trim($aFormValues['purchase_order_id']);
 	
 	if (trim($aFormValues['order_date']) == "") {
-		$objResponse->script("jAlert('警示', '請輸入入庫日期', 'red', '', 2000);");
+		$objResponse->script("jAlert('警示', '請輸入採購日期', 'red', '', 2000);");
 		return $objResponse;
 		exit;
 	}
-	if (trim($aFormValues['stock_in_type']) == "") {
-		$objResponse->script("jAlert('警示', '請選擇入庫類型', 'red', '', 2000);");
-		return $objResponse;
-		exit;
-	}
-
 
 	SaveValue($aFormValues);
 	
 	$objResponse->script("setSave();");
 	$objResponse->script("parent.myDraw();");
 
-	$objResponse->script("parent.$.fancybox.close();");
+	//$objResponse->script("parent.$.fancybox.close();");
+	//$objResponse->script("jAlert('警示', '已存檔', 'green', '', 500);");
 		
 	return $objResponse;
 }
@@ -57,32 +53,29 @@ function SaveValue($aFormValues){
 	$objResponse = new xajaxResponse();
 	
 		//進行存檔動作
-		$site_db				= trim($aFormValues['site_db']);
-		$purchase_order_id			= trim($aFormValues['purchase_order_id']);
-		$order_date			= trim($aFormValues['order_date']);
-		$stock_in_type			= trim($aFormValues['stock_in_type']);
-		$source_code			= trim($aFormValues['source_code']);
-		$supplier_id			= trim($aFormValues['supplier_id']);
-		$warehouse				= trim($aFormValues['warehouse']);
-		$handler_id				= trim($aFormValues['handler_id']);
-		$remarks				= trim($aFormValues['remarks']);
-		$status					= trim($aFormValues['status']);
-		$memberID				= trim($aFormValues['memberID']);
+		$site_db						= trim($aFormValues['site_db']);
+		$purchase_order_id				= trim($aFormValues['purchase_order_id']);
+		$order_date						= trim($aFormValues['order_date']);
+		$supplier_id					= trim($aFormValues['supplier_id']);
+		$handler_id						= trim($aFormValues['handler_id']);
+		$requirement_description		= trim($aFormValues['requirement_description']);
+		$delivered 						= (trim($aFormValues['delivered']) === "Y") ? "Y" : "N";
+		$delivery_date					= trim($aFormValues['delivery_date']);
+		$memberID						= trim($aFormValues['memberID']);
 		
 		//存入實體資料庫中
 		$mDB = "";
 		$mDB = new MywebDB();
 
-		$Qry="UPDATE stock_in set
-				 order_date			= '$order_date'
-				,stock_in_type		= '$stock_in_type'
-				,source_code		= '$source_code'
-				,supplier_id		= '$supplier_id'
-				,warehouse			= '$warehouse'
-				,handler_id			= '$handler_id'
-				,remarks			= '$remarks'
-				,last_modify		= now()
-				where purchase_order_id = '$purchase_order_id'";
+		$Qry="UPDATE purchaseorder set
+				 order_date							= '$order_date'
+				,supplier_id						= '$supplier_id'
+				,handler_id							= '$handler_id'
+				,requirement_description			= '$requirement_description'
+				,delivered							= '$delivered'
+				,delivery_date						= '$delivery_date'
+				,last_modify						= now()
+				where purchase_order_id 			= '$purchase_order_id'";
 				
 		$mDB->query($Qry);
         $mDB->remove();
@@ -112,6 +105,183 @@ function stock_in_detailDeleteRow($auto_seq){
 	
 }
 
+$xajax->registerFunction("execute_stock_in");
+function execute_stock_in($purchase_order_id){
+
+	$objResponse = new xajaxResponse();
+	
+	$mDB = "";
+	$mDB = new MywebDB();
+
+	//檢查此入庫單資料是否可以進行入庫作業
+	//先檢查主檔資料
+	$Qry="SELECT * FROM purchaseorder
+	where purchase_order_id = '$purchase_order_id'";
+	$mDB->query($Qry);
+	if ($mDB->rowCount() > 0) {
+		$row=$mDB->fetchRow(2);
+		$stock_in_date = $row['stock_in_date'];
+		$stock_in_type = $row['stock_in_type'];
+
+		if (($stock_in_date == "") || ($stock_in_date == "0000-00-00")) {
+			$mDB->remove();
+			$objResponse->script("jAlert('警示', '請輸入入庫日期', 'red', '', 2000);");
+			return $objResponse;
+			exit;
+		}
+		if ($stock_in_type == "") {
+			$mDB->remove();
+			$objResponse->script("jAlert('警示', '請選擇入庫類型', 'red', '', 2000);");
+			return $objResponse;
+			exit;
+		}
+
+	} else {
+		$mDB->remove();
+		$objResponse->script("jAlert('警示', '查無主檔訊息，資料可能有誤', 'red', '', 2000);");
+		return $objResponse;
+		exit;
+	}
+
+	//先檢查明細檔資料
+	$Qry="SELECT * FROM purchaseorder_detail
+	where purchase_order_id = '$purchase_order_id'
+	order by auto_seq";
+	$mDB->query($Qry);
+	if ($mDB->rowCount() > 0) {
+		while ($row=$mDB->fetchRow(2)) {
+			$material_no = $row['material_no'];
+			$warehouse = $row['warehouse'];
+			$stock_in_qty = $row['stock_in_qty'];
+			$unit_price = $row['unit_price'];
+
+			if ($material_no == "") {
+				$mDB->remove();
+				$objResponse->script("jAlert('警示', '物料編碼不可空白', 'red', '', 2000);");
+				return $objResponse;
+				exit;
+			}
+			if ($warehouse == "") {
+				$mDB->remove();
+				$objResponse->script("jAlert('警示', '倉庫別不可空白', 'red', '', 2000);");
+				return $objResponse;
+				exit;
+			}
+			if ($stock_in_qty <= 0) {
+				$mDB->remove();
+				$objResponse->script("jAlert('警示', '入庫數量不可為0或負數', 'red', '', 2000);");
+				return $objResponse;
+				exit;
+			}
+			if ($stock_in_qty <= 0) {
+				$mDB->remove();
+				$objResponse->script("jAlert('警示', '單價不可為0或負數', 'red', '', 2000);");
+				return $objResponse;
+				exit;
+			}
+		}
+	} else {
+		$mDB->remove();
+		$objResponse->script("jAlert('警示', '入庫清單沒有任何資料', 'red', '', 2000);");
+		return $objResponse;
+		exit;
+	}
+
+	$mDB2 = "";
+	$mDB2 = new MywebDB();
+
+	//檢查無問題即可進行入庫作業
+	$Qry="SELECT * FROM purchaseorder_detail
+	where purchase_order_id = '$purchase_order_id'
+	order by auto_seq";
+	$mDB->query($Qry);
+	if ($mDB->rowCount() > 0) {
+		while ($row=$mDB->fetchRow(2)) {
+			$material_no = $row['material_no'];
+			$warehouse = $row['warehouse'];
+			$stock_in_qty = $row['stock_in_qty'];
+			$unit_price = $row['unit_price'];
+
+			$total_amt = $stock_in_qty*$unit_price;
+
+			//必須先取得原庫存總庫存量及單價
+			$Qry2="SELECT * FROM inventory
+			WHERE material_no = '$material_no'";
+			$mDB2->query($Qry2);
+			if ($mDB2->rowCount() > 0) {
+				$row2=$mDB2->fetchRow(2);
+				$org_unit_price = $row2['unit_price'];
+				$stock_qty = $row2['stock_qty'];
+
+				$sum_stock_qty = $stock_qty+$stock_in_qty;
+
+				//加權移動平均
+				$avg_unit_price = round((($org_unit_price*$stock_qty)+($unit_price*$stock_in_qty))/$sum_stock_qty,4);
+
+
+				//更新倉庫子檔內容
+				//檢查是否已有此倉庫
+				$Qry2="SELECT * FROM inventory_sub
+				WHERE material_no = '$material_no' AND warehouse = '$warehouse'";
+				$mDB2->query($Qry2);
+				if ($mDB2->rowCount() > 0) {
+					$row2=$mDB2->fetchRow(2);
+					$auto_seq = $row2['auto_seq'];
+					//已存在則進行更新
+					$Qry2="UPDATE inventory_sub SET
+							stock_qty			= stock_qty + '$stock_in_qty'
+							,last_modify		= NOW()
+							WHERE auto_seq = '$auto_seq'";
+					$mDB2->query($Qry2);
+
+				} else {
+					//不存在則新增
+					$Qry2="INSERT INTO inventory_sub (material_no,warehouse,stock_qty,last_modify) VALUES ('$material_no','$warehouse','$stock_in_qty',NOW())";
+					$mDB2->query($Qry2);
+				}
+
+				//更新庫存料件資料
+				/*
+				$Qry2="UPDATE inventory set
+						unit_price			= ROUND(((stock_qty*unit_price) + '$total_amt')/(stock_qty + '$stock_in_qty'),4)
+						,stock_qty			= stock_qty + '$stock_in_qty'
+						,last_modify		= now()
+						where material_no = '$material_no'";
+				$mDB2->query($Qry2);
+				*/
+				$Qry2="UPDATE inventory set
+						unit_price			= '$avg_unit_price'
+						,stock_qty			= '$sum_stock_qty'
+						,last_modify		= now()
+						where material_no = '$material_no'";
+				$mDB2->query($Qry2);
+
+
+			}
+
+
+		}
+	}
+
+	//更新主檔狀態
+	$Qry="UPDATE stock_in set
+			status	= '已入庫'
+			,last_modify		= now()
+			where purchase_order_id = '$purchase_order_id'";
+	$mDB->query($Qry);
+
+
+	$mDB2->remove();
+	$mDB->remove();
+	
+    //$objResponse->script("oTable = $('#stock_in_detail_table').dataTable();oTable.fnDraw(false)");
+	$objResponse->script("parent.myDraw();");
+	$objResponse->script("autoclose('提示', '已完成入庫！', 500);");
+	$objResponse->script("parent.$.fancybox.close();");
+
+	return $objResponse;
+	
+}
 
 $xajax->processRequest();
 
@@ -127,61 +297,40 @@ $mess_title = $title;
 $mDB = "";
 $mDB = new MywebDB();
 
-$Qry="SELECT a.*,b.employee_name,c.supplier_name,d.contract_caption FROM purchaseorder a
+$Qry="SELECT a.*,b.employee_name,c.contract_caption FROM purchaseorder a
 LEFT JOIN employee b ON b.employee_id = a.handler_id
-LEFT JOIN supplier c ON c.supplier_id = a.company_id
-LEFT JOIN contract d ON d.contract_id = a.contract_id";
+LEFT JOIN contract c ON c.contract_id = a.contract_id
+WHERE a.purchase_order_id = '$purchase_order_id'";
 $mDB->query($Qry);
 $total = $mDB->rowCount();
+$delivered="";
 if ($total > 0) {
     //已找到符合資料
 	$row=$mDB->fetchRow(2);
 	$purchase_order_id = $row['purchase_order_id'];
-	$contract_id = $row['contract_id'];
-	$contract_caption = $row['contract_caption'];
-	$handler_id = $row['handler_id'];
-	$purchase_type = $row['purchase_type'];
 	$order_date = $row['order_date'];
-	$delivery_date = $row['delivery_date'];
-	$company_id = $row['company_id'];
-	$company_name = $row['supplier_name'];
-	$location = $row['location'];
-	$makeby = $row['makeby'];
+	$purchase_type = $row['purchase_type'];
+	$contract_id = $row['contract_id'];
+	$contract_name = $row['contract_caption'];
+	$contract_type = $row['contract_type'];
+	$supplier_id = $row['supplier_id'];
+	$handler_id = $row['handler_id'];
 	$employee_name = $row['employee_name'];
+	if($row['delivered'] == "Y"){
+		$checked = 'checked';
+	}else{
+		$checked = '';
+	}
+	$delivery_date = $row['delivery_date'];
+	$requirement_description = $row['requirement_description'];
+	$last_modify = $row['last_modify'];
   
-}
-
-//載入入庫類型
-$Qry="SELECT caption FROM items where pro_id ='stock_in_type' ORDER BY pro_id,orderby";
-$mDB->query($Qry);
-$select_stock_in_type = "";
-$select_stock_in_type .= "<option></option>";
-
-if ($mDB->rowCount() > 0) {
-	while ($row=$mDB->fetchRow(2)) {
-		$ch_stock_in_type = $row['caption'];
-		$select_stock_in_type .= "<option value=\"$ch_stock_in_type\" ".mySelect($ch_stock_in_type,$stock_in_type).">$ch_stock_in_type</option>";
-	}
-}
-
-//載入物料來源
-$Qry="SELECT caption FROM items where pro_id ='source_code' ORDER BY pro_id,orderby";
-$mDB->query($Qry);
-$select_source_code = "";
-$select_source_code .= "<option></option>";
-
-if ($mDB->rowCount() > 0) {
-	while ($row=$mDB->fetchRow(2)) {
-		$ch_source_code = $row['caption'];
-		$select_source_code .= "<option value=\"$ch_source_code\" ".mySelect($ch_source_code,$source_code).">$ch_source_code</option>";
-	}
 }
 
 //載入廠商
 $Qry="select supplier_id,supplier_name from supplier order by auto_seq";
 $mDB->query($Qry);
 $select_supplier = "";
-$select_supplier .= "<option value=\"$company_id\" ".mySelect($company_id,$company_id).">$company_id $company_name</option>";
 $select_supplier .= "<option></option>";
 if ($mDB->rowCount() > 0) {
 	while ($row=$mDB->fetchRow(2)) {
@@ -191,31 +340,7 @@ if ($mDB->rowCount() > 0) {
 	}
 }
 
-//載入倉庫別
-$Qry="SELECT caption FROM items where pro_id ='warehouse' ORDER BY pro_id,orderby";
-$mDB->query($Qry);
-$select_warehouse = "";
-$select_warehouse .= "<option></option>";
-
-if ($mDB->rowCount() > 0) {
-	while ($row=$mDB->fetchRow(2)) {
-		$ch_warehouse = $row['caption'];
-		$select_warehouse .= "<option value=\"$ch_warehouse\" ".mySelect($ch_warehouse,$warehouse).">$ch_warehouse</option>";
-	}
-}
-
-
 $mDB->remove();
-
-
-$show_savebtn=<<<EOT
-<div class="btn-group vbottom" role="group" style="margin-top:5px;">
-	<button id="save" class="btn btn-primary" type="button" onclick="CheckValue(this.form);" style="padding: 5px 15px;"><i class="bi bi-check-circle"></i>&nbsp;存檔</button>
-	<button id="cancel" class="btn btn-secondary display_none" type="button" onclick="setCancel();" style="padding: 5px 15px;"><i class="bi bi-x-circle"></i>&nbsp;取消</button>
-	<button id="close" class="btn btn-danger" type="button" onclick="parent.myDraw();parent.$.fancybox.close();" style="padding: 5px 15px;"><i class="bi bi-power"></i>&nbsp;關閉</button>
-</div>
-EOT;
-
 
 if (!($detect->isMobile() && !$detect->isTablet())) {
 	$isMobile = 0;
@@ -282,21 +407,37 @@ EOT;
 include $m_location."/sub_modal/project/func04/stock_in_ms/stock_in_detail.php";
 
 
-$show_fellow_btn=<<<EOT
-<div class="btn-group" role="group">
-	<button type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="openfancybox_edit('/index.php?ch=stock_in_detail_add&purchase_order_id=$purchase_order_id&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
-	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="stock_in_detail_myDraw();"><i class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
-</div>
-EOT; 
+$disabled = "";
 
 $show_fellow_btn2 = "";
 if ($status == "待入庫") {
 $show_fellow_btn2=<<<EOT
-<div class="btn-group float-end me-5" role="group">
-	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick=""><i class="bi bi-box-arrow-in-down"></i>&nbsp;執行入庫作業</button>
+<div class="btn-group" role="group">
+	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="CheckValue(this.form);execute_stock_in('$stock_in_id');"><i class="bi bi-box-arrow-in-down"></i>&nbsp;執行入庫作業</button>
 </div>
 EOT; 
+} else if ($status == "已入庫") {
+$show_fellow_btn2=<<<EOT
+<div class="size14 weight red">此單已於 $last_modify 完成入庫</div>
+EOT; 
+$disabled = "disabled";
 }
+
+$show_fellow_btn=<<<EOT
+<div class="btn-group" role="group">
+	<button $disabled type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="CheckValue(this.form);openfancybox_edit('/index.php?ch=purchaseorder_detail_add&purchase_order_id=$purchase_order_id&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
+	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="stock_in_detail_myDraw();"><i class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
+</div>
+EOT; 
+
+$show_savebtn=<<<EOT
+<div class="btn-group vbottom" role="group" style="margin-top:5px;">
+	<button $disabled id="save" class="btn btn-primary" type="button" onclick="CheckValue(this.form);" style="padding: 5px 15px;"><i class="bi bi-check-circle"></i>&nbsp;存檔</button>
+	<button $disabled id="cancel" class="btn btn-secondary display_none" type="button" onclick="setCancel();" style="padding: 5px 15px;"><i class="bi bi-x-circle"></i>&nbsp;取消</button>
+	<button id="close" class="btn btn-danger" type="button" onclick="parent.myDraw();parent.$.fancybox.close();" style="padding: 5px 15px;"><i class="bi bi-power"></i>&nbsp;關閉</button>
+</div>
+EOT;
+
 
 $show_center=<<<EOT
 <script src="/os/Autogrow-Textarea/jquery.autogrowtextarea.min.js"></script>
@@ -327,16 +468,41 @@ $style_css
 					</div>
 					<div class="container-fluid">
 						<div class="row">
+							<div class="col-lg-6 col-sm-6 col-md-12">
+								<div class="field_div1">採購合約:</div>
+								<div class="field_div3"><div class="blue weight mt-2">$contract_name</div></div>
+							</div> 
+							<div class="col-lg-6 col-sm-6 col-md-12">
+								<div class="field_div1">合約種類:</div>
+								<div class="field_div3"><div class="blue weight mt-2">$contract_type</div></div>
+							</div> 
+						</div>
+					</div>
+					<div class="container-fluid">
+						<div class="row">
 							<div class="col-lg-6 col-sm-12 col-md-12">
 								<div class="field_div1">採購日期:</div> 
-								<div class="field_div3 mt-2">								
-										$order_date
+								<div class="field_div3">
+									<div class="input-group" id="order_date"  style="width:100%;max-width:250px;">
+										<input $disabled type="text" class="form-control" name="order_date" placeholder="請輸入入庫日期" aria-describedby="order_date" value="$order_date" onchange="setEdit();">
+										<button $disabled class="btn btn-outline-secondary input-group-append input-group-addon" type="button" data-target="#order_date" data-toggle="datetimepicker"><i class="bi bi-calendar"></i></button>
+									</div>
+									<script type="text/javascript">
+										$(function () {          
+											$('#order_date').datetimepicker({
+												locale: 'zh-tw'
+												,format:"YYYY-MM-DD"
+												,allowInputToggle: true
+											});
+										});
+									</script>
 								</div> 
 							</div> 
 							<div class="col-lg-6 col-sm-12 col-md-12">
-								<div class="field_div1">合約名稱:</div> 
+								<div class="field_div1">採購性質:</div> 
 								<div class="field_div3">
-									<div class="blue weight mt-2">$contract_caption</div>
+									<div class="field_div2"><div class="weight">$purchase_type</div></div>
+									
 								</div> 
 							</div> 
 						</div>
@@ -346,7 +512,7 @@ $style_css
 							<div class="col-lg-6 col-sm-12 col-md-12">
 								<div class="field_div1">供應商:</div> 
 								<div class="field_div3">
-									<select id="supplier_id" name="supplier_id" placeholder="請選擇供應商" style="width:100%;max-width:350px;" value="$company_id">
+									<select $disabled id="supplier_id" name="supplier_id" value="$supplier_id" style="width:100%;max-width:350px;" onchange="setEdit();">
 										$select_supplier
 									</select>
 								</div> 
@@ -357,32 +523,87 @@ $style_css
 								<div class="field_div1">經辦人:</div> 
 								<div class="field_div3">
 									<div class="input-group text-nowrap" style="width:100%;max-width:450px;">
-										<input readonly type="text" class="form-control w-25" id="handler_id" name="handler_id" aria-describedby="handler_id_addon" value="$handler_id"/>
-										<input readonly type="text" class="form-control w-50" id="employee_name" name="employee_name"  value="$employee_name"/>
-										<button class="btn btn-outline-secondary w-25" type="button" id="handler_id_addon" onclick="openfancybox_edit('/index.php?ch=ch_employee&fm=$fm',800,'96%','');">選擇員工</button>
+										<input $disabled readonly type="text" class="form-control w-25" id="handler_id" name="handler_id" aria-describedby="handler_id_addon" value="$handler_id" onchange="setEdit();"/>
+										<input $disabled readonly type="text" class="form-control w-50" id="employee_name" name="employee_name"  value="$employee_name" onchange="setEdit();"/>
+										<button $disabled class="btn btn-outline-secondary w-25" type="button" id="handler_id_addon" onclick="openfancybox_edit('/index.php?ch=ch_employee&fm=$fm',800,'96%','');">選擇員工</button>
 									</div> 
 								</div> 
 							</div> 
 							<div class="col-lg-6 col-sm-12 col-md-12">
-								
 							</div> 
 						</div>
 						<div class="row">
 							<div class="col-lg-6 col-sm-12 col-md-12">
-								<div class="field_div1">需求描述:</div> 
+								<div class="field_div1">需求說明:</div> 
 								<div class="field_div3">
-									<textarea class="inputtext w-100 p-3" id="remarks" name="remarks" cols="80" rows="1" style="max-width: 500px;" onchange="setEdit();">$remarks</textarea>
-								</div> 
-							</div> 
-							<div class="col-lg-12 col-sm-12 col-md-12">
-								<div class="field_div1">施作地點:</div> 
-								<div class="field_div2">
-									<input type="text" class="inputtext" name="location" id="location" size="50" placeholder="請輸入施作地點" maxlength="50" style="width:100%;max-width:250px;"/>
+									<textarea $disabled class="inputtext w-100 p-3" id="remarks" name="remarks" cols="80" rows="1" style="max-width: 500px;" onchange="setEdit();">$requirement_description</textarea>
 								</div> 
 							</div> 
 						</div>
+
+							<div class="row">
+								<div class="col-lg-6 col-sm-12 col-md-12">
+									<div class="field_div1">到貨狀況:</div> 
+									<div class="field_div3 mt-2">
+										<input type="checkbox" class="inputtext" name="delivered" id="delivered" value="Y" $checked>
+										<label for="delivered">已到貨</label>
+									</div> 
+								</div> 
+
+								<div class="col-lg-6 col-sm-12 col-md-12">
+									<!-- 到貨日期區塊，初始隱藏 -->
+									<div class="row" id="delivery_date_section" style="display: none;">
+										<div class="field_div1">到貨日期:</div> 
+										<div class="field_div3">
+											<div class="input-group" id="delivery_date" style="width:100%;max-width:250px;">
+												<input type="text" class="form-control" name="delivery_date" placeholder="請輸入入庫日期" aria-describedby="delivery_date" value="$delivery_date">
+												<button class="btn btn-outline-secondary input-group-append input-group-addon" type="button" data-target="#delivery_date" data-toggle="datetimepicker">
+													<i class="bi bi-calendar"></i>
+												</button>
+											</div>
+											<script type="text/javascript">
+												$(function () {
+													$('#delivery_date').datetimepicker({
+														locale: 'zh-tw',
+														format: "YYYY-MM-DD",
+														allowInputToggle: true
+													});
+												});
+											</script>
+										</div> 
+									</div> 
+								</div>
+							</div>
+
+								<!-- 監聽checkbox:到貨 是否打勾-->
+								
+								<script>
+									$(document).ready(function() {
+										function toggleDeliveryDateSection() {
+											if ($('#delivered').is(':checked')) {
+												$('#delivery_date_section').slideDown();
+											} else {
+												$('#delivery_date_section').slideUp();
+											}
+										}
+
+										// 初始檢查
+										toggleDeliveryDateSection();
+
+										// checkbox 改變時再檢查一次
+										$('#delivered').change(function() {
+											toggleDeliveryDateSection();
+										});
+									});
+								</script>
+							</div>
+
 					</div>
-					<div style="margin: 10px 0 -15px 120px;">$show_fellow_btn $show_fellow_btn2</div>
+					<div class="w-100" style="margin: 10px 0 -15px 0;">
+						<div class="inline size14 weight mx-5">採購清單</div>
+						<div class="inline">$show_fellow_btn</div>
+						<div class="inline float-end me-5">$show_fellow_btn2</div>
+					</div>
 					$show_stock_in_detail
 					<div>
 						<input type="hidden" name="fm" value="$fm" />
@@ -430,6 +651,24 @@ $(document).ready(function() {
 	});
 });
 
+var execute_stock_in = function(stock_in_id){				
+
+	Swal.fire({
+	title: "您確定要執行入庫作業嗎?",
+	text: "完成此項作業後即無法再進行此單的修改，請留意",
+	icon: "question",
+	showCancelButton: true,
+	confirmButtonColor: "#3085d6",
+	cancelButtonColor: "#d33",
+	cancelButtonText: "取消",
+	confirmButtonText: "確認執行"
+	}).then((result) => {
+		if (result.isConfirmed) {
+			xajax_execute_stock_in(stock_in_id);
+		}
+	});
+
+};
 
 
 $(document).ready(async function() {

@@ -33,8 +33,12 @@ function processform($aFormValues){
 		return $objResponse;
 		exit;
 	}
-
-	if ((int)trim($aFormValues['stock_in_qty']) < 1)	{
+	if (trim($aFormValues['warehouse']) == "")	{
+		$objResponse->script("jAlert('警示', '請選擇倉庫別', 'red', '', 2000);");
+		return $objResponse;
+		exit;
+	}
+	if ((int)trim($aFormValues['purchase_qty']) < 1)	{
 		$objResponse->script("jAlert('警示', '入庫數量不可小於1', 'red', '', 2000);");
 		return $objResponse;
 		exit;
@@ -51,11 +55,11 @@ function processform($aFormValues){
 		$site_db			= trim($aFormValues['site_db']);
 		$templates			= trim($aFormValues['templates']);
 		$web_id				= trim($aFormValues['web_id']);
-		$stock_in_id		= trim($aFormValues['stock_in_id']);
+		$purchase_order_id	= trim($aFormValues['purchase_order_id']);
 		$material_no		= trim($aFormValues['material_no']);
-		$stock_in_qty		= trim($aFormValues['stock_in_qty']);
+		$warehouse			= trim($aFormValues['warehouse']);
+		$purchase_qty		= trim($aFormValues['purchase_qty']);
 		$unit_price			= trim($aFormValues['unit_price']);
-		$location_id		= trim($aFormValues['location_id']);
 		$remarks			= trim($aFormValues['remarks']);
 		$memberID			= trim($aFormValues['memberID']);
 		
@@ -66,7 +70,7 @@ function processform($aFormValues){
 		$mDB = new MywebDB();
 
 		//檢查物料編碼是否重覆
-		$Qry="SELECT material_no FROM stock_in_detail WHERE stock_in_id = '$stock_in_id' AND material_no = '$material_no'";
+		$Qry="SELECT material_no FROM purchaseorder_detail WHERE purchase_order_id = '$purchase_order_id' AND material_no = '$material_no'";
 		$mDB->query($Qry);
 		$total = $mDB->rowCount();
 		if ($total > 0) {
@@ -76,7 +80,7 @@ function processform($aFormValues){
 			exit;
 		}
 	  
-		$Qry="insert into stock_in_detail (stock_in_id,material_no,stock_in_qty,unit_price,location_id,remarks,last_modify) values ('$stock_in_id','$material_no','$stock_in_qty','$unit_price','$location_id','$remarks',now())";
+		$Qry="insert into purchaseorder_detail (purchase_order_id,material_no,warehouse,purchase_qty,unit_price,remarks,last_modify) values ('$purchase_order_id','$material_no','$warehouse','$purchase_qty','$unit_price','$remarks',now())";
 		$mDB->query($Qry);
 
         $mDB->remove();
@@ -92,109 +96,10 @@ function processform($aFormValues){
 $xajax->processRequest();
 
 $fm = $_GET['fm'];
-$stock_in_id = $_GET['stock_in_id'];
+$purchase_order_id = $_GET['purchase_order_id'];
 
 $mess_title = $title;
 
-
-//從 dispatch 取得 team_id
-//$dispatch_row = getkeyvalue2($site_db."_info","dispatch","stock_in_id = '$stock_in_id'","team_id");
-//$team_id =$dispatch_row['team_id'];
-
-
-/*
-$mDB = "";
-$mDB = new MywebDB();
-
-//載入所有工地
-$Qry="select material_no,construction_site from construction where sign_contract = 'Y' order by auto_seq";
-$mDB->query($Qry);
-$select_construction = "";
-$select_construction .= "<option></option>";
-
-if ($mDB->rowCount() > 0) {
-	while ($row=$mDB->fetchRow(2)) {
-		$ch_material_no = $row['material_no'];
-		$ch_construction_site = $row['construction_site'];
-		$select_construction .= "<option value=\"$ch_material_no\" ".mySelect($ch_material_no,$material_no).">$ch_material_no $ch_construction_site</option>";
-	}
-}
-
-//載入棟類別
-$select_list1 = array();
-$Qry="select * from items where pro_id = 'stock_in_qty' order by orderby";
-$mDB->query($Qry);
-if ($mDB->rowCount() > 0) {
-    //已找到符合資料
-	while ($row=$mDB->fetchRow(2)) {
-		$caption = $row['caption'];
-		$orderby = $row['orderby'];
-
-		$select_list1[] = $caption;
-	}
-}
-$series_select_list1 = json_encode($select_list1);
-
-
-//載入戶類別
-$select_list2 = array();
-$Qry="select * from items where pro_id = 'unit_price' order by orderby";
-$mDB->query($Qry);
-if ($mDB->rowCount() > 0) {
-    //已找到符合資料
-	while ($row=$mDB->fetchRow(2)) {
-		$caption = $row['caption'];
-		$orderby = $row['orderby'];
-
-		$select_list2[] = $caption;
-	}
-}
-$series_select_list2 = json_encode($select_list2);
-
-
-//載入樓類別
-$select_list3 = array();
-$Qry="select * from items where pro_id = 'location_id' order by orderby";
-$mDB->query($Qry);
-if ($mDB->rowCount() > 0) {
-    //已找到符合資料
-	while ($row=$mDB->fetchRow(2)) {
-		$caption = $row['caption'];
-		$orderby = $row['orderby'];
-
-		$select_list3[] = $caption;
-	}
-}
-$series_select_list3 = json_encode($select_list3);
-
-
-
-$mDB->remove();
-*/
-
-/*
-$material_no_list = array();
-
-$material_no_list[] = "Apple";
-$material_no_list[] = "Banana";
-$material_no_list[] = "Cherry";
-$material_no_list[] = "Date";
-$material_no_list[] = "Grapes";
-$material_no_list[] = "Guava";
-
-$series_material_no_list = json_encode($material_no_list);
-*/
-
-
-/*
-$material_no_list = "";
-$material_no_list .= "<option value=\"Apple\">Apple 蘋果</option>";
-$material_no_list .= "<option value=\"Banana\">Banana 香蕉</option>";
-$material_no_list .= "<option value=\"Cherry\">Cherry 櫻桃</option>";
-$material_no_list .= "<option value=\"Grapes\">Grapes 葡萄</option>";
-$material_no_list .= "<option value=\"Guava\">Grapes 番石榴</option>";
-$material_no_list .= "<option value=\"Mango\">Mango 芒果</option>";
-*/
 
 $mDB = "";
 $mDB = new MywebDB();
@@ -211,6 +116,21 @@ if ($mDB->rowCount() > 0) {
 		$material_no_list .= "<option value=\"$ch_material_no\">$ch_material_no $ch_material_name</option>";
 	}
 }
+
+
+//載入倉庫別
+$Qry="SELECT caption FROM items where pro_id ='warehouse' ORDER BY pro_id,orderby";
+$mDB->query($Qry);
+$select_warehouse = "";
+$select_warehouse .= "<option></option>";
+
+if ($mDB->rowCount() > 0) {
+	while ($row=$mDB->fetchRow(2)) {
+		$ch_warehouse = $row['caption'];
+		$select_warehouse .= "<option value=\"$ch_warehouse\" ".mySelect($ch_warehouse,$warehouse).">$ch_warehouse</option>";
+	}
+}
+
 
 $mDB->remove();
 
@@ -309,21 +229,23 @@ $style_css
 						</div> 
 					</div>
 					<div>
+						<div class="field_div1">倉庫別:</div> 
+						<div class="field_div2">
+							<select $disabled id="warehouse" name="warehouse" placeholder="請選擇倉庫別" style="width:100%;max-width:250px;" onchange="setEdit();">
+								$select_warehouse
+							</select>
+						</div> 
+					</div>
+					<div>
 						<div class="field_div1">入庫數量:</div> 
 						<div class="field_div2">
-							<input type="text" class="inputtext w-100" id="stock_in_qty" name="stock_in_qty" style="width:100%;max-width:180px;"/>
+							<input type="text" class="inputtext w-100" id="purchase_qty" name="purchase_qty" style="width:100%;max-width:180px;"/>
 						</div> 
 					</div>
 					<div>
 						<div class="field_div1">單價:</div> 
 						<div class="field_div2">
 							<input type="text" class="inputtext w-100" id="unit_price" name="unit_price" style="width:100%;max-width:180px;"/>
-						</div> 
-					</div>
-					<div>
-						<div class="field_div1">儲存位置:</div> 
-						<div class="field_div2">
-							<input type="text" class="inputtext w-100" id="location_id" name="location_id" size="80" maxlength="180" style="width:100%;max-width:180px;"/>
 						</div> 
 					</div>
 					<div>
@@ -338,7 +260,7 @@ $style_css
 					<input type="hidden" name="site_db" value="$site_db" />
 					<input type="hidden" name="templates" value="$templates" />
 					<input type="hidden" name="web_id" value="$web_id" />
-					<input type="hidden" name="stock_in_id" value="$stock_in_id" />
+					<input type="hidden" name="purchase_order_id" value="$purchase_order_id" />
 					<input type="hidden" name="memberID" value="$memberID" />
 					<button class="btn btn-primary" type="button" onclick="CheckValue(this.form);" style="padding: 10px;margin-right: 10px;"><i class="bi bi-check-lg green"></i>&nbsp;確定新增</button>
 					<button class="btn btn-danger" type="button" onclick="parent.$.fancybox.close();" style="padding: 10px;"><i class="bi bi-power"></i>&nbsp關閉</button>

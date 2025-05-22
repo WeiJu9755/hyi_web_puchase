@@ -52,10 +52,10 @@ if (isset($_GET['sid']))
 			$smarty->assign('show_center',$show_center);
 			$smarty->assign('xajax_javascript', $xajax->getJavascript('/xajax/'));
 			break;
-		case 'purchaseorder_in_detail_add':
+		case 'purchaseorder_detail_add':
 			$title = "新增料件";
 			$sid = "view01";
-			$modal = $m_location."/sub_modal/project/func04/purchaseorder_ms/purchaseorder_detail_add.php";
+			$modal = $m_location."/sub_modal/project/func09/purchaseorder_ms/purchaseorder_detail_add.php";
 			include $modal;
 			$smarty->assign('show_center',$show_center);
 			$smarty->assign('xajax_javascript', $xajax->getJavascript('/xajax/'));

@@ -53,13 +53,7 @@ function processform($aFormValues){
 
 	}
 
-	if (trim($aFormValues['company_id']) == "") {
-		$objResponse->script("jAlert('警示', '請選擇廠商', 'red', '', 2000);");
-		return $objResponse;
-
-	}
-
-	if (trim($aFormValues['company_id']) == "") {
+	if (trim($aFormValues['supplier_id']) == "") {
 		$objResponse->script("jAlert('警示', '請選擇廠商', 'red', '', 2000);");
 		return $objResponse;
 
@@ -81,7 +75,7 @@ function processform($aFormValues){
 	$order_date 		= trim($aFormValues['order_date']);
 	$delivery_date 		= trim($aFormValues['delivery_date']);
 	$delivered 			= (trim($aFormValues['delivered']) === "Y") ? "Y" : "N";
-	$company_id 		= trim($aFormValues['company_id']);
+	$supplier_id 		= trim($aFormValues['supplier_id']);
 	$location 			= trim($aFormValues['location']);
 	$purchase_order_id 	= "";
 
@@ -136,10 +130,10 @@ function processform($aFormValues){
     `order_date`,
     `delivery_date`,
     `delivered`,
-    `company_id`,
+    `supplier_id`,
     `location`,
     `created_at`,
-    `updated_at`
+    `last_modify`
 ) VALUES (
     '$purchase_order_id',
     '$handler_id',
@@ -153,7 +147,7 @@ function processform($aFormValues){
     '$order_date',
     '$delivery_date',
     '$delivered',
-    '$company_id',
+    '$supplier_id',
     '$location',
     '$now',
     '$now'
@@ -174,45 +168,6 @@ function processform($aFormValues){
 }
 
 
-$xajax->registerFunction("getno");
-function getno(){
-
-	$objResponse = new xajaxResponse();
-
-	//系統取號
-
-	//自動產生 purchase_order_id
-	$today = date("Ymd");
-
-	$mDB = "";
-	$mDB = new MywebDB();
-	
-	//取得最後代號
-	$Qry = "SELECT purchase_order_id FROM stock_in WHERE SUBSTRING(purchase_order_id,3,8) = '$today' ORDER BY purchase_order_id DESC LIMIT 0,1";
-	$mDB->query($Qry);
-	if ($mDB->rowCount() > 0) {
-		$row=$mDB->fetchRow(2);
-		$temp_purchase_order_id = $row['purchase_order_id'];
-		$str4 = substr($temp_purchase_order_id,-4,4);
-		$num = (int)$str4+1;
-		$filled_int = sprintf("%04d", $num);
-		$new_purchase_order_id = "SI".$today.$filled_int;
-	} else {
-		$new_purchase_order_id = "SI".$today."0001";
-	}
-
-	$mDB->remove();
-
-
-
-
-	
-	$objResponse->assign("purchase_order_id","value",$new_purchase_order_id);
-
-	return $objResponse;
-
-}
-
 
 $xajax->processRequest();
 
@@ -225,8 +180,16 @@ $mess_title = $title;
 $employee_row = getkeyvalue2($site_db.'_info','employee',"member_no = '$memberID'",'employee_id');
 $employee_id = $employee_row['employee_id'];
 
+$mDB = "";
+$mDB = new MywebDB();
 
-
+$Qry="SELECT employee_id,employee_name from employee where employee_id = '$employee_id'";
+$mDB->query($Qry);
+if ($mDB->rowCount() > 0) {
+	$row=$mDB->fetchRow(2);
+	$makeby = $row['employee_name'];
+	$employee_id = $row['employee_id'];
+}
 
 $default_day = date("Y-m-d");
 
@@ -429,7 +392,7 @@ $style_css
 							<div class="col-lg-12 col-sm-12 col-md-12">
 								<div class="field_div1">供應商:</div> 
 								<div class="field_div2">
-									<select id="company_id" name="company_id" placeholder="請選擇廠商" style="width:100%;max-width:250px;">
+									<select id="supplier_id" name="supplier_id" placeholder="請選擇廠商" style="width:100%;max-width:250px;">
 										$select_supplier
 									</select>
 								</div> 
@@ -528,7 +491,7 @@ var myDraw = function(){
 	oTable.fnDraw(false);
 }
 
-xajax_getno();
+
 
 </script>
 EOT;

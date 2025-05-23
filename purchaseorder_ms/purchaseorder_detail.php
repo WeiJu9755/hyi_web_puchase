@@ -148,16 +148,16 @@ $list_view
 
 				//備註
 				var remarks = "";
-				if (aData[6] != null && aData[6] != "")
-					remarks = aData[6];
+				if (aData[7] != null && aData[7] != "")
+					remarks = aData[7];
 
 				$('td:eq(6)', nRow).html( '<div class="d-flex justify-content-start align-items-center size14 text-start" style="height:auto;min-height:32px;">'+remarks+'</div>' );
 				
 				var show_btn = '';
 				
-				var url1 = "openfancybox_edit('/index.php?ch=purchaseorder_detail_modify&auto_seq="+aData[7]+"&fm=$fm',800,'96%','');";
+				var url1 = "openfancybox_edit('/index.php?ch=purchaseorder_detail_modify&auto_seq="+aData[8]+"&fm=$fm',800,'96%','');";
 
-				var mdel = "purchaseorder_detail_myDel('"+aData[7]+"');";
+				var mdel = "purchaseorder_detail_myDel('"+aData[8]+"');";
 			
 					show_btn = '<div class="btn-group text-nowrap">'
 							+'<button type="button" class="btn btn-light py-0 my-0" onclick="'+url1+'" title="修改"><i class="bi bi-pencil-square"></i></button>'

@@ -84,8 +84,8 @@ function SaveValue($aFormValues){
 	return $objResponse;
 }
 
-$xajax->registerFunction("stock_in_detailDeleteRow");
-function stock_in_detailDeleteRow($auto_seq){
+$xajax->registerFunction("purchaseorder_detailDeleteRow");
+function purchaseorder_detailDeleteRow($auto_seq){
 
 	$objResponse = new xajaxResponse();
 	
@@ -93,20 +93,20 @@ function stock_in_detailDeleteRow($auto_seq){
 	$mDB = new MywebDB();
 
 	//刪除子資料
-	$Qry="delete from stock_in_detail where auto_seq = '$auto_seq'";
+	$Qry="delete from purchaseorder_detail where auto_seq = '$auto_seq'";
 	$mDB->query($Qry);
 
 	$mDB->remove();
 	
-    $objResponse->script("oTable = $('#stock_in_detail_table').dataTable();oTable.fnDraw(false)");
+    $objResponse->script("oTable = $('#purchaseorder_detail_table').dataTable();oTable.fnDraw(false)");
 	$objResponse->script("autoclose('提示', '資料已刪除！', 500);");
 
 	return $objResponse;
 	
 }
 
-$xajax->registerFunction("execute_stock_in");
-function execute_stock_in($purchase_order_id){
+$xajax->registerFunction("execute_purchaseorder");
+function execute_purchaseorder($purchase_order_id){
 
 	$objResponse = new xajaxResponse();
 	
@@ -120,21 +120,16 @@ function execute_stock_in($purchase_order_id){
 	$mDB->query($Qry);
 	if ($mDB->rowCount() > 0) {
 		$row=$mDB->fetchRow(2);
-		$stock_in_date = $row['stock_in_date'];
-		$stock_in_type = $row['stock_in_type'];
+		$order_date = $row['order_date'];
 
-		if (($stock_in_date == "") || ($stock_in_date == "0000-00-00")) {
+
+		if (($order_date == "") || ($order_date == "0000-00-00")) {
 			$mDB->remove();
 			$objResponse->script("jAlert('警示', '請輸入入庫日期', 'red', '', 2000);");
 			return $objResponse;
 			exit;
 		}
-		if ($stock_in_type == "") {
-			$mDB->remove();
-			$objResponse->script("jAlert('警示', '請選擇入庫類型', 'red', '', 2000);");
-			return $objResponse;
-			exit;
-		}
+
 
 	} else {
 		$mDB->remove();
@@ -152,7 +147,7 @@ function execute_stock_in($purchase_order_id){
 		while ($row=$mDB->fetchRow(2)) {
 			$material_no = $row['material_no'];
 			$warehouse = $row['warehouse'];
-			$stock_in_qty = $row['stock_in_qty'];
+			$purchase_qty = $row['purchase_qty'];
 			$unit_price = $row['unit_price'];
 
 			if ($material_no == "") {
@@ -167,13 +162,13 @@ function execute_stock_in($purchase_order_id){
 				return $objResponse;
 				exit;
 			}
-			if ($stock_in_qty <= 0) {
+			if ($purchase_qty <= 0) {
 				$mDB->remove();
 				$objResponse->script("jAlert('警示', '入庫數量不可為0或負數', 'red', '', 2000);");
 				return $objResponse;
 				exit;
 			}
-			if ($stock_in_qty <= 0) {
+			if ($purchase_qty <= 0) {
 				$mDB->remove();
 				$objResponse->script("jAlert('警示', '單價不可為0或負數', 'red', '', 2000);");
 				return $objResponse;
@@ -199,10 +194,10 @@ function execute_stock_in($purchase_order_id){
 		while ($row=$mDB->fetchRow(2)) {
 			$material_no = $row['material_no'];
 			$warehouse = $row['warehouse'];
-			$stock_in_qty = $row['stock_in_qty'];
+			$purchase_qty = $row['purchase_qty'];
 			$unit_price = $row['unit_price'];
 
-			$total_amt = $stock_in_qty*$unit_price;
+			$total_amt = $purchase_qty*$unit_price;
 
 			//必須先取得原庫存總庫存量及單價
 			$Qry2="SELECT * FROM inventory
@@ -213,10 +208,10 @@ function execute_stock_in($purchase_order_id){
 				$org_unit_price = $row2['unit_price'];
 				$stock_qty = $row2['stock_qty'];
 
-				$sum_stock_qty = $stock_qty+$stock_in_qty;
+				$sum_stock_qty = $stock_qty+$purchase_qty;
 
 				//加權移動平均
-				$avg_unit_price = round((($org_unit_price*$stock_qty)+($unit_price*$stock_in_qty))/$sum_stock_qty,4);
+				$avg_unit_price = round((($org_unit_price*$stock_qty)+($unit_price*$purchase_qty))/$sum_stock_qty,4);
 
 
 				//更新倉庫子檔內容
@@ -229,22 +224,22 @@ function execute_stock_in($purchase_order_id){
 					$auto_seq = $row2['auto_seq'];
 					//已存在則進行更新
 					$Qry2="UPDATE inventory_sub SET
-							stock_qty			= stock_qty + '$stock_in_qty'
+							stock_qty			= stock_qty + '$purchase_qty'
 							,last_modify		= NOW()
 							WHERE auto_seq = '$auto_seq'";
 					$mDB2->query($Qry2);
 
 				} else {
 					//不存在則新增
-					$Qry2="INSERT INTO inventory_sub (material_no,warehouse,stock_qty,last_modify) VALUES ('$material_no','$warehouse','$stock_in_qty',NOW())";
+					$Qry2="INSERT INTO inventory_sub (material_no,warehouse,stock_qty,last_modify) VALUES ('$material_no','$warehouse','$purchase_qty',NOW())";
 					$mDB2->query($Qry2);
 				}
 
 				//更新庫存料件資料
 				/*
 				$Qry2="UPDATE inventory set
-						unit_price			= ROUND(((stock_qty*unit_price) + '$total_amt')/(stock_qty + '$stock_in_qty'),4)
-						,stock_qty			= stock_qty + '$stock_in_qty'
+						unit_price			= ROUND(((stock_qty*unit_price) + '$total_amt')/(stock_qty + '$purchase_qty'),4)
+						,stock_qty			= stock_qty + '$purchase_qty'
 						,last_modify		= now()
 						where material_no = '$material_no'";
 				$mDB2->query($Qry2);
@@ -264,7 +259,7 @@ function execute_stock_in($purchase_order_id){
 	}
 
 	//更新主檔狀態
-	$Qry="UPDATE stock_in set
+	$Qry="UPDATE purchaseorder set
 			status	= '已入庫'
 			,last_modify		= now()
 			where purchase_order_id = '$purchase_order_id'";
@@ -274,7 +269,7 @@ function execute_stock_in($purchase_order_id){
 	$mDB2->remove();
 	$mDB->remove();
 	
-    //$objResponse->script("oTable = $('#stock_in_detail_table').dataTable();oTable.fnDraw(false)");
+    //$objResponse->script("oTable = $('#purchaseorder_detail_table').dataTable();oTable.fnDraw(false)");
 	$objResponse->script("parent.myDraw();");
 	$objResponse->script("autoclose('提示', '已完成入庫！', 500);");
 	$objResponse->script("parent.$.fancybox.close();");
@@ -404,7 +399,7 @@ EOT;
 
 
 
-include $m_location."/sub_modal/project/func04/stock_in_ms/stock_in_detail.php";
+include $m_location."/sub_modal/project/func09/purchaseorder_ms/purchaseorder_detail.php";
 
 
 $disabled = "";
@@ -413,7 +408,7 @@ $show_fellow_btn2 = "";
 if ($status == "待入庫") {
 $show_fellow_btn2=<<<EOT
 <div class="btn-group" role="group">
-	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="CheckValue(this.form);execute_stock_in('$stock_in_id');"><i class="bi bi-box-arrow-in-down"></i>&nbsp;執行入庫作業</button>
+	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="CheckValue(this.form);execute_purchaseorder('$purchase_order_id');"><i class="bi bi-box-arrow-in-down"></i>&nbsp;執行入庫作業</button>
 </div>
 EOT; 
 } else if ($status == "已入庫") {
@@ -426,7 +421,7 @@ $disabled = "disabled";
 $show_fellow_btn=<<<EOT
 <div class="btn-group" role="group">
 	<button $disabled type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="CheckValue(this.form);openfancybox_edit('/index.php?ch=purchaseorder_detail_add&purchase_order_id=$purchase_order_id&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
-	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="stock_in_detail_myDraw();"><i class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
+	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="purchaseorder_detail_myDraw();"><i class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
 </div>
 EOT; 
 
@@ -604,7 +599,7 @@ $style_css
 						<div class="inline">$show_fellow_btn</div>
 						<div class="inline float-end me-5">$show_fellow_btn2</div>
 					</div>
-					$show_stock_in_detail
+					$show_purchaseorder_detail
 					<div>
 						<input type="hidden" name="fm" value="$fm" />
 						<input type="hidden" name="site_db" value="$site_db" />
@@ -651,7 +646,7 @@ $(document).ready(function() {
 	});
 });
 
-var execute_stock_in = function(stock_in_id){				
+var execute_purchaseorder = function(purchase_order_id){				
 
 	Swal.fire({
 	title: "您確定要執行入庫作業嗎?",
@@ -664,7 +659,7 @@ var execute_stock_in = function(stock_in_id){
 	confirmButtonText: "確認執行"
 	}).then((result) => {
 		if (result.isConfirmed) {
-			xajax_execute_stock_in(stock_in_id);
+			xajax_execute_purchaseorder(purchase_order_id);
 		}
 	});
 

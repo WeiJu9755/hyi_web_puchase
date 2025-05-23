@@ -4,7 +4,7 @@
 	@include_once '/website/include/pub_function.php';
 
 	$site_db = $_GET['site_db'];
-	$stock_in_id = $_GET['stock_in_id'];
+	$purchase_order_id = $_GET['purchase_order_id'];
 	
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * Easy set variables 詮能
@@ -13,13 +13,13 @@
 	/* Array of database columns which should be read and sent back to DataTables. Use a space where
 	 * you want to insert a non-database field (for example a counter or static image)
 	 */
-	$aColumns = array( 'a.material_no','b.material_name','b.unit','a.stock_in_qty','a.unit_price','a.location_id','a.remarks','a.auto_seq','a.stock_in_id','a.last_modify','b.specification');
+	$aColumns = array( 'a.material_no','b.material_name','b.unit','a.purchase_qty','a.unit_price','a.location_id','a.remarks','a.auto_seq','a.purchase_order_id','a.last_modify','b.specification');
 	
 	/* Indexed column (used for fast and accurate table cardinality) */
 	$sIndexColumn = "auto_seq";
 	
 	/* DB table to use */
-	$sTable = "stock_in_detail";
+	$sTable = "purchaseorder_detail";
 	
 //	include( $_SERVER['DOCUMENT_ROOT']."/class/products_db.php" );
 	include( "/website/class/".$site_db."_db.php" );
@@ -52,7 +52,7 @@
 	/*
 	 * Ordering
 	 */
-	$sOrder = "ORDER BY a.stock_in_id,a.auto_seq ";
+	$sOrder = "ORDER BY a.purchase_order_id,a.auto_seq ";
 	/*
 	if ( isset( $_GET['iSortCol_0'] ) )
 	{
@@ -116,9 +116,9 @@
 
 	
 	if ($sWhere=="")
-		$sWhere = "WHERE a.stock_in_id = '$stock_in_id' ";
+		$sWhere = "WHERE a.purchase_order_id = '$purchase_order_id' ";
 	else
-		$sWhere .= " and a.stock_in_id = '$stock_in_id' ";
+		$sWhere .= " and a.purchase_order_id = '$purchase_order_id' ";
 	
 	 
 	$sQuery = "

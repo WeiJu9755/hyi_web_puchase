@@ -25,9 +25,9 @@ $Prompt = getlang("提示訊息");
 $Confirm = getlang("確認");
 $Cancel = getlang("取消");
 
-$purchaseorder_row = getkeyvalue2($site_db."_info","purchaseorder","purchase_order_id = '$purchase_order_id'");
+$purchaseorder_row = getkeyvalue2($site_db."_info","purchaseorder","purchase_order_id = '$purchase_order_id'","status");
 // $status =$stock_in_row['status'];
-
+$status =$purchaseorder_row['status'];
 
 
 
@@ -159,10 +159,14 @@ $list_view
 
 				var mdel = "purchaseorder_detail_myDel('"+aData[8]+"');";
 			
+				if ('$status' == '已結單') {
+					show_btn = '<div class="size14">已結單</div>';
+				} else {
 					show_btn = '<div class="btn-group text-nowrap">'
 							+'<button type="button" class="btn btn-light py-0 my-0" onclick="'+url1+'" title="修改"><i class="bi bi-pencil-square"></i></button>'
 							+'<button type="button" class="btn btn-light py-0 my-0" onclick="'+mdel+'" title="刪除"><i class="bi bi-trash"></i></button>'
 							+'</div>';
+				}
 				
 				$('td:eq(7)', nRow).html( '<div class="text-center">'+show_btn+'</div>' );
 

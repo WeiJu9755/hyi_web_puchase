@@ -17,6 +17,7 @@ $detect = new Mobile_Detect;
 $xajax = new xajax();
 
 $xajax->registerFunction("processform");
+$delivery_date= "";
 
 function processform($aFormValues){
 

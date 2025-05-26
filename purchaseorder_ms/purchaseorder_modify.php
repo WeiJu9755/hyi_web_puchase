@@ -148,7 +148,8 @@ function execute_purchaseorder($purchase_order_id){
 			$material_no = $row['material_no'];
 			$warehouse = $row['warehouse'];
 			$purchase_qty = $row['purchase_qty'];
-			$unit_price = $row['unit_price'];
+			$delivered = $row['delivered'];
+			
 
 			if ($material_no == "") {
 				$mDB->remove();
@@ -174,6 +175,7 @@ function execute_purchaseorder($purchase_order_id){
 				return $objResponse;
 				exit;
 			}
+			
 		}
 	} else {
 		$mDB->remove();
@@ -196,71 +198,12 @@ function execute_purchaseorder($purchase_order_id){
 			$warehouse = $row['warehouse'];
 			$purchase_qty = $row['purchase_qty'];
 			$unit_price = $row['unit_price'];
-
-			$total_amt = $purchase_qty*$unit_price;
-
-			//必須先取得原庫存總庫存量及單價
-			$Qry2="SELECT * FROM inventory
-			WHERE material_no = '$material_no'";
-			$mDB2->query($Qry2);
-			if ($mDB2->rowCount() > 0) {
-				$row2=$mDB2->fetchRow(2);
-				$org_unit_price = $row2['unit_price'];
-				$stock_qty = $row2['stock_qty'];
-
-				$sum_stock_qty = $stock_qty+$purchase_qty;
-
-				//加權移動平均
-				$avg_unit_price = round((($org_unit_price*$stock_qty)+($unit_price*$purchase_qty))/$sum_stock_qty,4);
-
-
-				//更新倉庫子檔內容
-				//檢查是否已有此倉庫
-				$Qry2="SELECT * FROM inventory_sub
-				WHERE material_no = '$material_no' AND warehouse = '$warehouse'";
-				$mDB2->query($Qry2);
-				if ($mDB2->rowCount() > 0) {
-					$row2=$mDB2->fetchRow(2);
-					$auto_seq = $row2['auto_seq'];
-					//已存在則進行更新
-					$Qry2="UPDATE inventory_sub SET
-							stock_qty			= stock_qty + '$purchase_qty'
-							,last_modify		= NOW()
-							WHERE auto_seq = '$auto_seq'";
-					$mDB2->query($Qry2);
-
-				} else {
-					//不存在則新增
-					$Qry2="INSERT INTO inventory_sub (material_no,warehouse,stock_qty,last_modify) VALUES ('$material_no','$warehouse','$purchase_qty',NOW())";
-					$mDB2->query($Qry2);
-				}
-
-				//更新庫存料件資料
-				/*
-				$Qry2="UPDATE inventory set
-						unit_price			= ROUND(((stock_qty*unit_price) + '$total_amt')/(stock_qty + '$purchase_qty'),4)
-						,stock_qty			= stock_qty + '$purchase_qty'
-						,last_modify		= now()
-						where material_no = '$material_no'";
-				$mDB2->query($Qry2);
-				*/
-				$Qry2="UPDATE inventory set
-						unit_price			= '$avg_unit_price'
-						,stock_qty			= '$sum_stock_qty'
-						,last_modify		= now()
-						where material_no = '$material_no'";
-				$mDB2->query($Qry2);
-
-
-			}
-
-
 		}
 	}
 
 	//更新主檔狀態
 	$Qry="UPDATE purchaseorder set
-			status	= '已入庫'
+			status	= '已結單'
 			,last_modify		= now()
 			where purchase_order_id = '$purchase_order_id'";
 	$mDB->query($Qry);
@@ -271,7 +214,7 @@ function execute_purchaseorder($purchase_order_id){
 	
     //$objResponse->script("oTable = $('#purchaseorder_detail_table').dataTable();oTable.fnDraw(false)");
 	$objResponse->script("parent.myDraw();");
-	$objResponse->script("autoclose('提示', '已完成入庫！', 500);");
+	$objResponse->script("autoclose('提示', '已完成結單並執行入庫！', 500);");
 	$objResponse->script("parent.$.fancybox.close();");
 
 	return $objResponse;
@@ -310,6 +253,7 @@ if ($total > 0) {
 	$contract_type = $row['contract_type'];
 	$supplier_id = $row['supplier_id'];
 	$handler_id = $row['handler_id'];
+	$status = $row['status'];
 	$employee_name = $row['employee_name'];
 	if($row['delivered'] == "Y"){
 		$checked = 'checked';
@@ -405,15 +349,15 @@ include $m_location."/sub_modal/project/func09/purchaseorder_ms/purchaseorder_de
 $disabled = "";
 
 $show_fellow_btn2 = "";
-if ($status == "待入庫") {
+if ($status == "未結單") {
 $show_fellow_btn2=<<<EOT
 <div class="btn-group" role="group">
-	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="CheckValue(this.form);execute_purchaseorder('$purchase_order_id');"><i class="bi bi-box-arrow-in-down"></i>&nbsp;執行入庫作業</button>
+	<button type="button" id="execute_purchaseorder" class="btn btn-success btn-sm text-nowrap px-3" onclick="CheckValue(this.form);execute_purchaseorder('$purchase_order_id');"><i class="bi bi-box-arrow-in-down"></i>&nbsp;結單並執行入庫作業</button>
 </div>
 EOT; 
-} else if ($status == "已入庫") {
+} else if ($status == "已結單") {
 $show_fellow_btn2=<<<EOT
-<div class="size14 weight red">此單已於 $last_modify 完成入庫</div>
+<div class="size14 weight red">此單已於 $last_modify 結單完成入庫</div>
 EOT; 
 $disabled = "disabled";
 }
@@ -534,6 +478,10 @@ $style_css
 									<textarea $disabled class="inputtext w-100 p-3" id="requirement_description" name="requirement_description" cols="80" rows="1" style="max-width: 500px;" onchange="setEdit();">$requirement_description</textarea>
 								</div> 
 							</div> 
+								<div class="col-lg-6 col-sm-12 col-md-12">
+								<div class="field_div1">狀態:</div> 
+								<div class="field_div3 pt-3">$status</div> 
+							</div> 
 						</div>
 
 							<div class="row">
@@ -568,7 +516,7 @@ $style_css
 										</div> 
 									</div> 
 								</div>
-							</div>
+
 
 								<!-- 監聽checkbox:到貨 是否打勾-->
 								
@@ -577,9 +525,13 @@ $style_css
 										function toggleDeliveryDateSection() {
 											if ($('#delivered').is(':checked')) {
 												$('#delivery_date_section').slideDown();
+												$('#execute_purchaseorder').slideDown();
 											} else {
 												$('#delivery_date_section').slideUp();
+												$('#execute_purchaseorder').slideUp();
 											}
+											
+
 										}
 
 										// 初始檢查
@@ -592,6 +544,7 @@ $style_css
 									});
 								</script>
 							</div>
+							
 
 					</div>
 					<div class="w-100" style="margin: 10px 0 -15px 0;">

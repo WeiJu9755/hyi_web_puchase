@@ -531,7 +531,7 @@ $style_css
 							<div class="col-lg-6 col-sm-12 col-md-12">
 								<div class="field_div1">需求說明:</div> 
 								<div class="field_div3">
-									<textarea $disabled class="inputtext w-100 p-3" id="remarks" name="remarks" cols="80" rows="1" style="max-width: 500px;" onchange="setEdit();">$requirement_description</textarea>
+									<textarea $disabled class="inputtext w-100 p-3" id="requirement_description" name="requirement_description" cols="80" rows="1" style="max-width: 500px;" onchange="setEdit();">$requirement_description</textarea>
 								</div> 
 							</div> 
 						</div>

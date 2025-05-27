@@ -36,6 +36,12 @@ function processform($aFormValues){
 
 	}
 
+	if (trim($aFormValues['contract_seq']) == "") {
+		$objResponse->script("jAlert('警示', '請選擇合約工項', 'red', '', 2000);");
+		return $objResponse;
+
+	}
+
 	if (trim($aFormValues['makeby']) == "") {
 		$objResponse->script("jAlert('警示', '請輸入經辦人', 'red', '', 2000);");
 		return $objResponse;
@@ -428,7 +434,7 @@ $style_css
 									<div class="field_div1">到貨日期:</div> 
 									<div class="field_div3">
 									<div class="input-group" id="delivery_date" style="width:100%;max-width:250px;">
-										<input type="text" class="form-control" name="delivery_date" placeholder="請輸入入庫日期" aria-describedby="delivery_date" value="$default_day">
+										<input type="text" class="form-control" name="delivery_date" placeholder="請輸入入庫日期" aria-describedby="delivery_date" >
 										<button class="btn btn-outline-secondary input-group-append input-group-addon" type="button" data-target="#delivery_date" data-toggle="datetimepicker">
 										<i class="bi bi-calendar"></i>
 										</button>

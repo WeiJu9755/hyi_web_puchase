@@ -287,8 +287,8 @@ EOT;
 				<th scope="col" class="text-center" style="width:7%;">採購性質</th>
 				<th scope="col" class="text-center" style="width:25%;">需求說明</th>
 				<th scope="col" class="text-center" style="width:7%;">訂購日期</th>
-				<th scope="col" class="text-center" style="width:7%;">交貨日期</th>
 				<th scope="col" class="text-center" style="width:7%;">是否到貨</th>
+				<th scope="col" class="text-center" style="width:7%;">到貨日期</th>
 				<th scope="col" class="text-center" style="width:7%;">附檔</th>
 				<th scope="col" class="text-center text-nowrap" style="width:7%;">處理</th>
 			</tr>
@@ -370,23 +370,28 @@ $list_view
 				}
 				$('td:eq(3)', nRow).html('<div class="size14 text-center">'+order_date+'</div>');
 
-				var delivery_date = '';
-				if (aData[4] != null && aData[4] != "") {
-					delivery_date = aData[4];
-				}
-				$('td:eq(4)', nRow).html('<div class="size14 text-center">'+delivery_date+'</div>');
-
 				var delivered = '';
-					if (aData[5] === 'Y') {
+					if (aData[4] === 'Y') {
 						delivered = '<span class="text-success"><i class="bi bi-check-circle"></i></span>';
-					} else if (aData[5] === 'N') {
+					} else if (aData[4] === 'N') {
 						delivered = '<span class="text-danger"><i class="bi bi-x-circle"></i></span>';
 					}
-					$('td:eq(5)', nRow).html('<div class="size14 text-center">' + delivered + '</div>');
+					$('td:eq(4)', nRow).html('<div class="size14 text-center">' + delivered + '</div>');
 
+				var delivery_date = '';
+				if (aData[5] != null && aData[5] != "") {
+					delivery_date = aData[5];
+				}
+				$('td:eq(5)', nRow).html('<div class="size14 text-center">'+delivery_date+'</div>');
+
+				var status = '';
+				if (aData[7] != null && aData[7] != "") {
+					status = aData[7];
+				}
+				
 				var show_btn = '';
 
-				var url1 = "openfancybox_edit('/index.php?ch=edit&purchase_order_id="+aData[0]+"&fm=$fm',1800,'100%','');";
+				var url1 = "openfancybox_edit('/index.php?ch=edit&auto_seq="+aData[6]+"&fm=$fm',1800,'100%','');";
 				var url3 = "openfancybox_edit('/index.php?tb=purchaseorder&auto_seq="+aData[6]+"&project_id=$project_id&auth_id=$auth_id&fm=pjattach','96%','96%','myDraw();');";
 				var files_total = '<div class="d-flex justify-content-center align-items-center size12 text-center mt-2" id="files_total'+aData[6]+'"></div>';
 				xajax_returnValue('$web_id','$project_id','$auth_id',aData[6],'purchaseorder');
@@ -394,11 +399,18 @@ $list_view
 				$('td:eq(6)', nRow).html( '<a href="javascript:void(0);" onclick="'+url3+'" title="上傳檔案">'+files_total+'</a>' );
 
 				var mdel = "myDel('" + aData[0] + "');";
-				show_btn = '<div class="btn-group text-nowrap">'
-						+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+url1+'" title="編輯"><i class="bi bi-pencil-square"></i></button>'
-						+'<button type="button" class="btn btn-light" onclick="'+url3+'" title="上傳檔案"><i class="bi bi-file-arrow-up"></i></button>'
-						+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+mdel+'" title="刪除"><i class="bi bi-trash"></i></button>'
-						+ '</div>';
+				if (status == '已結單') {
+					show_btn = '<div class="btn-group text-nowrap">'
+							+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+url1+'" title="編輯"><i class="bi bi-pencil-square"></i></button>'
+							+'<button type="button" class="btn btn-light" onclick="'+url3+'" title="上傳檔案"><i class="bi bi-file-arrow-up"></i></button>'
+							+'</div>';
+				} else {
+					show_btn = '<div class="btn-group text-nowrap">'
+							+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+url1+'" title="編輯"><i class="bi bi-pencil-square"></i></button>'
+							+'<button type="button" class="btn btn-light" onclick="'+url3+'" title="上傳檔案"><i class="bi bi-file-arrow-up"></i></button>'
+							+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+mdel+'" title="刪除"><i class="bi bi-trash"></i></button>'
+							+ '</div>';
+						}
 				
 				$('td:eq(7)', nRow).html('<div class="text-center">'+show_btn+'</div>');
 

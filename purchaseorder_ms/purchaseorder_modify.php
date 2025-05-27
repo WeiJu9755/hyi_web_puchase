@@ -50,6 +50,7 @@ function processform($aFormValues){
 $xajax->registerFunction("SaveValue");
 function SaveValue($aFormValues){
 
+
 	$objResponse = new xajaxResponse();
 	
 		//進行存檔動作
@@ -59,8 +60,8 @@ function SaveValue($aFormValues){
 		$supplier_id					= trim($aFormValues['supplier_id']);
 		$handler_id						= trim($aFormValues['handler_id']);
 		$requirement_description		= trim($aFormValues['requirement_description']);
-		$delivered 						= (trim($aFormValues['delivered']) === "Y") ? "Y" : "N";
-		$delivery_date					= trim($aFormValues['delivery_date']);
+		$delivered = (trim($aFormValues['delivered']) === "Y") ? "Y" : "N";
+		$delivery_date = ($delivered === "Y") ? "'".trim($aFormValues['delivery_date'])."'" : "NULL";
 		$memberID						= trim($aFormValues['memberID']);
 		
 		//存入實體資料庫中
@@ -73,7 +74,7 @@ function SaveValue($aFormValues){
 				,handler_id							= '$handler_id'
 				,requirement_description			= '$requirement_description'
 				,delivered							= '$delivered'
-				,delivery_date						= '$delivery_date'
+				,delivery_date						=  $delivery_date
 				,last_modify						= now()
 				where purchase_order_id 			= '$purchase_order_id'";
 				
@@ -225,7 +226,8 @@ $xajax->processRequest();
 
 
 $fm = $_GET['fm'];
-$purchase_order_id = $_GET['purchase_order_id'];
+// $purchase_order_id = $_GET['purchase_order_id'];
+$auto_seq = $_GET['auto_seq'];
 
 $mess_title = $title;
 
@@ -238,7 +240,7 @@ $mDB = new MywebDB();
 $Qry="SELECT a.*,b.employee_name,c.contract_caption FROM purchaseorder a
 LEFT JOIN employee b ON b.employee_id = a.handler_id
 LEFT JOIN contract c ON c.contract_id = a.contract_id
-WHERE a.purchase_order_id = '$purchase_order_id'";
+WHERE a.auto_seq = '$auto_seq'";
 $mDB->query($Qry);
 $total = $mDB->rowCount();
 $delivered="";
@@ -352,7 +354,7 @@ $show_fellow_btn2 = "";
 if ($status == "未結單") {
 $show_fellow_btn2=<<<EOT
 <div class="btn-group" role="group">
-	<button type="button" id="execute_purchaseorder" class="btn btn-success btn-sm text-nowrap px-3" onclick="CheckValue(this.form);execute_purchaseorder('$purchase_order_id');"><i class="bi bi-box-arrow-in-down"></i>&nbsp;結單並執行入庫作業</button>
+	<button type="button" id="execute_purchase_btn" class="btn btn-success btn-sm text-nowrap px-3" onclick="CheckValue(this.form);execute_purchaseorder('$purchase_order_id');"><i class="bi bi-box-arrow-in-down"></i>&nbsp;結單並執行入庫作業</button>
 </div>
 EOT; 
 } else if ($status == "已結單") {
@@ -364,7 +366,7 @@ $disabled = "disabled";
 
 $show_fellow_btn=<<<EOT
 <div class="btn-group" role="group">
-	<button $disabled type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="CheckValue(this.form);openfancybox_edit('/index.php?ch=purchaseorder_detail_add&purchase_order_id=$purchase_order_id&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
+	<button $disabled type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="CheckValue(this.form);openfancybox_edit('/index.php?ch=purchaseorder_detail_add&auto_seq=$auto_seq&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
 	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="purchaseorder_detail_myDraw();"><i class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
 </div>
 EOT; 
@@ -499,7 +501,7 @@ $style_css
 										<div class="field_div1">到貨日期:</div> 
 										<div class="field_div3">
 											<div class="input-group" id="delivery_date" style="width:100%;max-width:250px;">
-												<input type="text" class="form-control" name="delivery_date" placeholder="請輸入入庫日期" aria-describedby="delivery_date" value="$delivery_date">
+												<input $disabled type="text" class="form-control" name="delivery_date" placeholder="請輸入入庫日期" aria-describedby="delivery_date" value="$delivery_date">
 												<button class="btn btn-outline-secondary input-group-append input-group-addon" type="button" data-target="#delivery_date" data-toggle="datetimepicker">
 													<i class="bi bi-calendar"></i>
 												</button>
@@ -525,10 +527,10 @@ $style_css
 										function toggleDeliveryDateSection() {
 											if ($('#delivered').is(':checked')) {
 												$('#delivery_date_section').slideDown();
-												$('#execute_purchaseorder').slideDown();
+												$('#execute_purchase_btn').slideDown();
 											} else {
 												$('#delivery_date_section').slideUp();
-												$('#execute_purchaseorder').slideUp();
+												$('#execute_purchase_btn').slideUp();
 											}
 											
 

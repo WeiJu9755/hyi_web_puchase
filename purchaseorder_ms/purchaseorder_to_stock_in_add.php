@@ -52,6 +52,9 @@ function processform($aFormValues){
 	//存入實體資料庫中
 	$mDB = "";
 	$mDB = new MywebDB();
+
+	$mDB2 = "";
+	$mDB2 = new MywebDB();
 	
 	//檢查帳號是否重複
 	$Qry="select stock_in_id from stock_in where stock_in_id = '$stock_in_id'";
@@ -67,6 +70,8 @@ function processform($aFormValues){
 	
 	$Qry="insert into stock_in (stock_in_id,stock_in_date,stock_in_type,handler_id,create_date,last_modify) values ('$stock_in_id','$stock_in_date','$stock_in_type','$employee_id',now(),now())";
 	$mDB->query($Qry);
+
+	$Qry2="select into stock_in (stock_in_id,stock_in_date,stock_in_type,handler_id,create_date,last_modify) values ('$stock_in_id','$stock_in_date','$stock_in_type','$employee_id',now(),now())";
 
 	$mDB->remove();
 	if (!empty($stock_in_id)) {

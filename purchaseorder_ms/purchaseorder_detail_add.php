@@ -96,7 +96,17 @@ function processform($aFormValues){
 $xajax->processRequest();
 
 $fm = $_GET['fm'];
-$purchase_order_id = $_GET['purchase_order_id'];
+$auto_seq = $_GET['auto_seq'];
+$mDB = "";
+$mDB = new MywebDB();
+$Qry="select purchase_order_id,auto_seq from purchaseorder where auto_seq = '$auto_seq'";
+$mDB->query($Qry);
+if ($mDB->rowCount() > 0) {
+	while ($row=$mDB->fetchRow(2)) {
+		$purchase_order_id = $row['purchase_order_id'];
+	}
+}
+
 
 $mess_title = $title;
 

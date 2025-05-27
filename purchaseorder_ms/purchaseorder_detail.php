@@ -25,7 +25,7 @@ $Prompt = getlang("提示訊息");
 $Confirm = getlang("確認");
 $Cancel = getlang("取消");
 
-$purchaseorder_row = getkeyvalue2($site_db."_info","purchaseorder","purchase_order_id = '$purchase_order_id'","status");
+$purchaseorder_row = getkeyvalue2($site_db."_info","purchaseorder","auto_seq = '$auto_seq'","status");
 // $status =$stock_in_row['status'];
 $status =$purchaseorder_row['status'];
 
@@ -61,7 +61,7 @@ $scroll = true;
 if (!($detect->isMobile() && !$detect->isTablet())) {
 	$scroll = false;
 }
-
+$encoded_purchase_order_id = rawurlencode($purchase_order_id);
 
 $show_purchaseorder_detail=<<<EOT
 <style>
@@ -86,7 +86,7 @@ $list_view
 			"paging": false,
 			"searching": false,  //禁用原生搜索
 			"ordering": false,
-			"ajaxSource": "/smarty/templates/$site_db/$templates/sub_modal/project/func09/purchaseorder_ms/server_purchaseorder_detail.php?site_db=$site_db&purchase_order_id=$purchase_order_id",
+			"ajaxSource": "/smarty/templates/$site_db/$templates/sub_modal/project/func09/purchaseorder_ms/server_purchaseorder_detail.php?site_db=$site_db&purchase_order_id=$encoded_purchase_order_id",
 			"info": false,
 			"language": {
 						"sUrl": "$dataTable_de"
@@ -109,8 +109,8 @@ $list_view
 				//物料名稱/規格
 				var material_name = "";
 				if (aData[1] != null && aData[1] != "") {
-					if (aData[10] != null && aData[10] != "") {
-						material_name = '<div class="size14 weight">'+aData[1]+'</div><div class="size12">'+aData[10]+'</div>';
+					if (aData[11] != null && aData[11] != "") {
+						material_name = '<div class="size14 weight">'+aData[1]+'</div><div class="size12">'+aData[11]+'</div>';
 					} else {
 						material_name = '<div class="size14 weight">'+aData[1]+'</div>';
 					}

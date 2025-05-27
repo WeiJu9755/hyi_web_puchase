@@ -30,8 +30,8 @@
 	 * you want to insert a non-database field (for example a counter or static image)
 	 */
 	
-	$aColumns = array( 'purchase_order_id','purchase_type','requirement_description','order_date','delivery_date','delivered','auto_seq','null');
-	
+	$aColumns = array( 'purchase_order_id','purchase_type','requirement_description','order_date','delivered',	'delivery_date','auto_seq','status');
+
 	/* Indexed column (used for fast and accurate table cardinality) */
 	$sIndexColumn = "purchase_order_id";
 	

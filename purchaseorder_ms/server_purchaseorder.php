@@ -69,7 +69,7 @@
 	/*
 	 * Ordering
 	 */
-	$sOrder = "ORDER BY purchase_order_id ";
+	$sOrder = "ORDER BY order_date DESC ";
 	/*
 	if ( isset( $_GET['iSortCol_0'] ) )
 	{

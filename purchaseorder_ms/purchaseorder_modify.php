@@ -72,7 +72,7 @@ function SaveValue($aFormValues){
 				,supplier_id						= '$supplier_id'
 				,handler_id							= '$handler_id'
 				,requirement_description			= '$requirement_description'
-				,delivery_date						=  $delivery_date
+				,delivery_date						= '$delivery_date'
 				,last_modify						= now()
 				where purchase_order_id 			= '$purchase_order_id'";
 				
@@ -499,16 +499,22 @@ $style_css
 							<div class="row">
 
 								<div class="col-lg-6 col-sm-12 col-md-12">
-									<div class="row" id="delivery_date_section" >
+									<div class="row" >
 										<div class="field_div1">到貨日期:</div> 
 										<div class="field_div3">
-											<div class="input-group" id="delivery_date" style="width:100%;max-width:250px;">
-												<input type="text" class="form-control" name="delivery_date" placeholder="請輸入入庫日期" aria-describedby="delivery_date" value="$delivery_date">
-												<button class="btn btn-outline-secondary input-group-append input-group-addon" type="button" data-target="#delivery_date" data-toggle="datetimepicker">
-													<i class="bi bi-calendar"></i>
-												</button>
+											<div class="input-group" id="delivery_date"  style="width:100%;max-width:250px;">
+												<input type="text" class="form-control" name="delivery_date" placeholder="請輸入入庫日期" aria-describedby="delivery_date" value="$delivery_date" onchange="setEdit();">
+												<button class="btn btn-outline-secondary input-group-append input-group-addon" type="button" data-target="#delivery_date" data-toggle="datetimepicker"><i class="bi bi-calendar"></i></button>
 											</div>
-											
+											<script type="text/javascript">
+												$(function () {          
+													$('#delivery_date').datetimepicker({
+														locale: 'zh-tw'
+														,format:"YYYY-MM-DD"
+														,allowInputToggle: true
+													});
+												});
+											</script>
 										</div> 
 									</div> 
 								</div>

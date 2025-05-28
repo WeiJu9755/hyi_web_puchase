@@ -60,8 +60,7 @@ function SaveValue($aFormValues){
 		$supplier_id					= trim($aFormValues['supplier_id']);
 		$handler_id						= trim($aFormValues['handler_id']);
 		$requirement_description		= trim($aFormValues['requirement_description']);
-		$delivered = (trim($aFormValues['delivered']) === "Y") ? "Y" : "N";
-		$delivery_date = ($delivered === "Y") ? "'".trim($aFormValues['delivery_date'])."'" : "NULL";
+		$delivery_date 					= trim($aFormValues['delivery_date']);
 		$memberID						= trim($aFormValues['memberID']);
 		
 		//存入實體資料庫中
@@ -73,7 +72,6 @@ function SaveValue($aFormValues){
 				,supplier_id						= '$supplier_id'
 				,handler_id							= '$handler_id'
 				,requirement_description			= '$requirement_description'
-				,delivered							= '$delivered'
 				,delivery_date						=  $delivery_date
 				,last_modify						= now()
 				where purchase_order_id 			= '$purchase_order_id'";
@@ -149,7 +147,6 @@ function execute_purchaseorder($purchase_order_id){
 			$material_no = $row['material_no'];
 			$warehouse = $row['warehouse'];
 			$purchase_qty = $row['purchase_qty'];
-			$delivered = $row['delivered'];
 			
 
 			if ($material_no == "") {
@@ -216,10 +213,17 @@ function execute_purchaseorder($purchase_order_id){
     //$objResponse->script("oTable = $('#purchaseorder_detail_table').dataTable();oTable.fnDraw(false)");
 	$objResponse->script("parent.myDraw();");
 	$objResponse->script("autoclose('提示', '已完成結單並執行入庫！', 500);");
-	$objResponse->script("parent.$.fancybox.close();");
+	// $objResponse->script("parent.$.fancybox.close();");
+	// 等待 1 秒後自動重新整理頁面（讓使用者看到提示）
+	$objResponse->script("setTimeout(function(){ location.reload(); }, 500);");
+
 
 	return $objResponse;
 	
+}
+
+function to_stock_in_add($auto_seq){
+
 }
 
 $xajax->processRequest();
@@ -243,7 +247,6 @@ LEFT JOIN contract c ON c.contract_id = a.contract_id
 WHERE a.auto_seq = '$auto_seq'";
 $mDB->query($Qry);
 $total = $mDB->rowCount();
-$delivered="";
 if ($total > 0) {
     //已找到符合資料
 	$row=$mDB->fetchRow(2);
@@ -257,11 +260,6 @@ if ($total > 0) {
 	$handler_id = $row['handler_id'];
 	$status = $row['status'];
 	$employee_name = $row['employee_name'];
-	if($row['delivered'] == "Y"){
-		$checked = 'checked';
-	}else{
-		$checked = '';
-	}
 	$delivery_date = $row['delivery_date'];
 	$requirement_description = $row['requirement_description'];
 	$last_modify = $row['last_modify'];
@@ -354,23 +352,35 @@ $show_fellow_btn2 = "";
 if ($status == "未結單") {
 $show_fellow_btn2=<<<EOT
 <div class="btn-group" role="group">
-	<button type="button" id="execute_purchase_btn" class="btn btn-success btn-sm text-nowrap px-3" onclick="CheckValue(this.form);execute_purchaseorder('$purchase_order_id');"><i class="bi bi-box-arrow-in-down"></i>&nbsp;結單並執行入庫作業</button>
+	<button type="button" id="execute_purchase_btn" class="btn btn-success btn-sm text-nowrap px-3" onclick="CheckValue(this.form);execute_purchaseorder('$purchase_order_id');"><i class="bi bi-box-arrow-in-down"></i>&nbsp;結單作業</button>
 </div>
 EOT; 
 } else if ($status == "已結單") {
 $show_fellow_btn2=<<<EOT
 <div class="size14 weight red">此單已於 $last_modify 結單完成入庫</div>
+
 EOT; 
 $disabled = "disabled";
 }
 
+
+$show_fellow_btn = "";
+if ($status == "未結單") {
 $show_fellow_btn=<<<EOT
 <div class="btn-group" role="group">
 	<button $disabled type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="CheckValue(this.form);openfancybox_edit('/index.php?ch=purchaseorder_detail_add&auto_seq=$auto_seq&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
 	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="purchaseorder_detail_myDraw();"><i class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
 </div>
 EOT; 
-
+}else if ($status == "已結單") {
+	$show_fellow_btn=<<<EOT
+<div class="btn-group" role="group">
+	<button $disabled type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="CheckValue(this.form);openfancybox_edit('/index.php?ch=purchaseorder_detail_add&auto_seq=$auto_seq&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
+	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="purchaseorder_detail_myDraw();"><i class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
+	<button type="button" id="execute_purchase_btn" class="btn btn-warning btn-sm text-nowrap px-3" onclick="window.location='/?ch=purchaseorder_to_stock_in_add&auto_seq=$auto_seq&fm=$fm';"><i class="bi bi-box-arrow-in-down"></i>&nbsp;入庫作業</button>
+</div>
+EOT; 
+}
 $show_savebtn=<<<EOT
 <div class="btn-group vbottom" role="group" style="margin-top:5px;">
 	<button $disabled id="save" class="btn btn-primary" type="button" onclick="CheckValue(this.form);" style="padding: 5px 15px;"><i class="bi bi-check-circle"></i>&nbsp;存檔</button>
@@ -487,64 +497,22 @@ $style_css
 						</div>
 
 							<div class="row">
-								<div class="col-lg-6 col-sm-12 col-md-12">
-									<div class="field_div1">到貨狀況:</div> 
-									<div class="field_div3 mt-2">
-										<input type="checkbox" class="inputtext" name="delivered" id="delivered" value="Y" $checked>
-										<label for="delivered">已到貨</label>
-									</div> 
-								</div> 
 
 								<div class="col-lg-6 col-sm-12 col-md-12">
-									<!-- 到貨日期區塊，初始隱藏 -->
-									<div class="row" id="delivery_date_section" style="display: none;">
+									<div class="row" id="delivery_date_section" >
 										<div class="field_div1">到貨日期:</div> 
 										<div class="field_div3">
 											<div class="input-group" id="delivery_date" style="width:100%;max-width:250px;">
-												<input $disabled type="text" class="form-control" name="delivery_date" placeholder="請輸入入庫日期" aria-describedby="delivery_date" value="$delivery_date">
+												<input type="text" class="form-control" name="delivery_date" placeholder="請輸入入庫日期" aria-describedby="delivery_date" value="$delivery_date">
 												<button class="btn btn-outline-secondary input-group-append input-group-addon" type="button" data-target="#delivery_date" data-toggle="datetimepicker">
 													<i class="bi bi-calendar"></i>
 												</button>
 											</div>
-											<script type="text/javascript">
-												$(function () {
-													$('#delivery_date').datetimepicker({
-														locale: 'zh-tw',
-														format: "YYYY-MM-DD",
-														allowInputToggle: true
-													});
-												});
-											</script>
+											
 										</div> 
 									</div> 
 								</div>
 
-
-								<!-- 監聽checkbox:到貨 是否打勾-->
-								
-								<script>
-									$(document).ready(function() {
-										function toggleDeliveryDateSection() {
-											if ($('#delivered').is(':checked')) {
-												$('#delivery_date_section').slideDown();
-												$('#execute_purchase_btn').slideDown();
-											} else {
-												$('#delivery_date_section').slideUp();
-												$('#execute_purchase_btn').slideUp();
-											}
-											
-
-										}
-
-										// 初始檢查
-										toggleDeliveryDateSection();
-
-										// checkbox 改變時再檢查一次
-										$('#delivered').change(function() {
-											toggleDeliveryDateSection();
-										});
-									});
-								</script>
 							</div>
 							
 
@@ -604,7 +572,7 @@ $(document).ready(function() {
 var execute_purchaseorder = function(purchase_order_id){				
 
 	Swal.fire({
-	title: "您確定要執行入庫作業嗎?",
+	title: "您確定要執行結單作業嗎?",
 	text: "完成此項作業後即無法再進行此單的修改，請留意",
 	icon: "question",
 	showCancelButton: true,

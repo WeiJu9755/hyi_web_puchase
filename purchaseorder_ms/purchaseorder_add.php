@@ -36,12 +36,6 @@ function processform($aFormValues){
 
 	}
 
-	if (trim($aFormValues['contract_seq']) == "") {
-		$objResponse->script("jAlert('警示', '請選擇合約工項', 'red', '', 2000);");
-		return $objResponse;
-
-	}
-
 	if (trim($aFormValues['makeby']) == "") {
 		$objResponse->script("jAlert('警示', '請輸入經辦人', 'red', '', 2000);");
 		return $objResponse;
@@ -68,23 +62,21 @@ function processform($aFormValues){
 
 	
 	
-	$fm					= trim($aFormValues['fm']);
-	$site_db			= trim($aFormValues['site_db']);
-	$templates			= trim($aFormValues['templates']);
-	$handler_id			= trim($aFormValues['handler_id']);
-	$big_fixed 			= (trim($aFormValues['big_fixed']) === "Y") ? "Y" : "N";
-	$purchase_type		= trim($aFormValues['purchase_type']);
-	$contract_id 		= trim($aFormValues['contract_id']);
-	$contract_seq 		= trim($aFormValues['contract_seq']);
-	$contract_type 		= trim($aFormValues['contract_type']);
-	$makeby 			= trim($aFormValues['makeby']);
-	$requirement_description = trim($aFormValues['requirement_description']);
-	$order_date 		= trim($aFormValues['order_date']);
-	$delivery_date 		= trim($aFormValues['delivery_date']);
-	$delivered 			= (trim($aFormValues['delivered']) === "Y") ? "Y" : "N";
-	$supplier_id 		= trim($aFormValues['supplier_id']);
-	$location 			= trim($aFormValues['location']);
-	$purchase_order_id 	= "";
+	$fm							= trim($aFormValues['fm']);
+	$site_db					= trim($aFormValues['site_db']);
+	$templates					= trim($aFormValues['templates']);
+	$handler_id					= trim($aFormValues['handler_id']);
+	$big_fixed 					= (trim($aFormValues['big_fixed']) === "Y") ? "Y" : "N";
+	$purchase_type				= trim($aFormValues['purchase_type']);
+	$contract_id 				= trim($aFormValues['contract_id']);
+	$contract_type 				= trim($aFormValues['contract_type']);
+	$makeby 					= trim($aFormValues['makeby']);
+	$requirement_description 	= trim($aFormValues['requirement_description']);
+	$order_date 				= trim($aFormValues['order_date']);
+	$delivery_date 				= trim($aFormValues['delivery_date']);
+	$supplier_id 				= trim($aFormValues['supplier_id']);
+	$location 					= trim($aFormValues['location']);
+	$purchase_order_id 			= "";
 
 	// 採購編號生成
 	$mDB = "";
@@ -129,14 +121,12 @@ function processform($aFormValues){
     `handler_id`,
     `purchase_type`,
     `contract_id`,
-    `contract_seq`,
     `contract_type`,
     `big_fixed`,
     `makeby`,
     `requirement_description`,
     `order_date`,
     `delivery_date`,
-    `delivered`,
     `supplier_id`,
     `location`,
     `created_at`,
@@ -146,14 +136,12 @@ function processform($aFormValues){
     '$handler_id',
     '$purchase_type',
     '$contract_id',
-    $contract_seq,
     '$contract_type',
     '$big_fixed',
     '$makeby',
     '$requirement_description',
     '$order_date',
     '$delivery_date',
-    '$delivered',
     '$supplier_id',
     '$location',
     '$now',
@@ -323,14 +311,6 @@ $style_css
 						</div>
 						<div class="row">
 							<div class="col-lg-6 col-sm-12 col-md-12">
-								<div class="field_div1">工項:</div> 
-								<div class="field_div3">
-									<div class="input-group" style="width:100%;max-width:155px;">
-										<input type="number" class="form-control" name="contract_seq" id="contract_seq" placeholder="請輸入工項代號" >
-									</div>
-								</div>
-							</div> 
-							<div class="col-lg-6 col-sm-12 col-md-12">
 								<div class="field_div1">合約類別:</div> 
 								<div class="field_div2">
 									<select id="contract_type" name="contract_type" placeholder="請選擇合約類別" style="width:100%;max-width:250px;">
@@ -413,23 +393,7 @@ $style_css
 								</div> 
 							</div> 
 						</div>
-						<div class="row d-flex flex-wrap gap-2 mt-3">
-							<div class="field_div1 gap-2">採購事項確認:</div> 
-							<div class="col-lg-2 col-sm-2 col-md-2 mt-2 mb-2 ">
-									<div class="field_div3 ">
-										<input type="checkbox" class="inputtext" name="big_fixed" id="big_fixed" value="Y" >
-										<label for="big_fixed">大修</label>
-									</div> 
-							</div>
-							<div class="col-lg-2 col-sm-2 col-md-2 mt-2 mb-2">
-									<div class="field_div3 ">
-										<input type="checkbox" class="inputtext" name="delivered" id="delivered" value="Y" >
-										<label for="delivered" >已到貨</label>
-									</div> 
-							</div>
-						</div>
-						<!-- 到貨日期區塊，初始隱藏 -->
-								<div class="row" id="delivery_date_section" style="display: none;">
+								<div class="row" id="delivery_date_section">
 								<div class="col-lg-6 col-sm-12 col-md-12">
 									<div class="field_div1">到貨日期:</div> 
 									<div class="field_div3">
@@ -451,19 +415,6 @@ $style_css
 									</div> 
 								</div> 
 								</div>
-
-								<!-- 監聽checkbox:到貨 是否打勾-->
-								<script>
-								$(document).ready(function() {
-									$('#delivered').change(function() {
-									if ($(this).is(':checked')) {
-										$('#delivery_date_section').slideDown();
-									} else {
-										$('#delivery_date_section').slideUp();
-									}
-									});
-								});
-								</script>
 					</div>
 				</div>
 

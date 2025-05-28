@@ -17,8 +17,9 @@ $detect = new Mobile_Detect;
 $xajax = new xajax();
 
 $xajax->registerFunction("processform");
+$auto_seq = $_GET['auto_seq'];
 
-function processform($aFormValues){
+function processform($aFormValues,$auto_seq){
 
 	$objResponse = new xajaxResponse();
 
@@ -47,6 +48,7 @@ function processform($aFormValues){
 	$stock_in_id		= trim($aFormValues['stock_in_id']);
 	$stock_in_date 		= trim($aFormValues['stock_in_date']);
 	$stock_in_type 		= "採購入庫";
+	$source_code 		= "採購供應商";
 	
 
 	//存入實體資料庫中
@@ -55,6 +57,12 @@ function processform($aFormValues){
 
 	$mDB2 = "";
 	$mDB2 = new MywebDB();
+
+	$mDB3 = "";
+	$mDB3 = new MywebDB();
+
+	$mDB4 = "";
+	$mDB4 = new MywebDB();
 	
 	//檢查帳號是否重複
 	$Qry="select stock_in_id from stock_in where stock_in_id = '$stock_in_id'";
@@ -67,23 +75,69 @@ function processform($aFormValues){
 		exit;
 	}
 	
-	
-	$Qry="insert into stock_in (stock_in_id,stock_in_date,stock_in_type,handler_id,create_date,last_modify) values ('$stock_in_id','$stock_in_date','$stock_in_type','$employee_id',now(),now())";
+	// 新增入庫單
+	$Qry="insert into stock_in (stock_in_id,stock_in_date,stock_in_type,handler_id,source_code,create_date,last_modify) values ('$stock_in_id','$stock_in_date','$stock_in_type','$employee_id','$source_code',now(),now())";
 	$mDB->query($Qry);
 
-	$Qry2="select into stock_in (stock_in_id,stock_in_date,stock_in_type,handler_id,create_date,last_modify) values ('$stock_in_id','$stock_in_date','$stock_in_type','$employee_id',now(),now())";
+	// 取得採購單資料，並直接新增入庫至stock_in_detail
+	$Qry2 = "SELECT a.auto_seq,a.supplier_id,b.* FROM purchaseorder a
+			LEFT JOIN purchaseorder_detail b ON a.purchase_order_id = b.purchase_order_id
+			where a.auto_seq = '$auto_seq'";
 
-	$mDB->remove();
-	if (!empty($stock_in_id)) {
-		$objResponse->script("myDraw();");
-		$objResponse->script("art.dialog.tips('已新增，請繼續輸入其他資料...',2);");
-		$objResponse->script("window.location='/?ch=edit&stock_in_id=$stock_in_id&fm=$fm';");
-	} else {
-		$objResponse->script("jAlert('警示', '發生不明原因的錯誤，資料未新增，請再試一次!', 'red', '', 2000);");
+	$mDB2->query($Qry2);		
+
+	if ($mDB2->rowCount() > 0) {
+		while ($row=$mDB2->fetchRow(2)) {
+			$material_no = $row['material_no'];
+			$warehouse = $row['warehouse'];
+			$location_id = $row['location_id'];
+			$stock_in_qty = $row['purchase_qty'];
+			$unit_price = $row['unit_price'];
+			$remarks = $row['remarks'];
+			$supplier_id = $row['supplier_id'];
+			$Qry3 = "INSERT INTO `stock_in_detail` (
+									`stock_in_id`,
+									`material_no`,
+									`warehouse`,
+									`location_id`,
+									`stock_in_qty`,
+									`unit_price`,
+									`remarks`,
+									`create_date`,
+									`last_modify`
+									) VALUES (
+									'$stock_in_id',    -- 入庫單號
+									'$material_no',    -- 材料編號
+									'$warehouse',      -- 倉庫名稱
+									'$location_id',    -- 儲位編號
+									$stock_in_qty,     -- 入庫數量
+									$unit_price,       -- 單價
+									'$remarks',        -- 備註
+									NOW(),             -- 建立時間
+									NOW()              -- 最後修改時間
+									);";
+			$mDB3->query($Qry3);
+			
+			// 更新入庫單基本資料
+			$Qry4 = "UPDATE `stock_in` SET `supplier_id` = '$supplier_id' WHERE `stock_in_id` = '$stock_in_id';";
+			$mDB4->query($Qry4);
+		}
+
+		$mDB->remove();
+		$mDB2->remove();
+		$mDB3->remove();
+		$mDB4->remove();
+		$objResponse->script("jAlert('成功', '新增入庫成功','green', '', 2000);");
+		$objResponse->script("parent.myDraw();");
+		$objResponse->script("parent.location.href = '?ch=stock_in';");
 		$objResponse->script("parent.$.fancybox.close();");
+
 	}
+
 	
-	return $objResponse;	
+	
+	return $objResponse;
+		
 }
 
 
@@ -305,7 +359,7 @@ $style_css
 					<input type="hidden" name="site_db" value="$site_db" />
 					<input type="hidden" name="templates" value="$templates" />
 					<input type="hidden" name="employee_id" value="$employee_id" />
-					<button class="btn btn-primary" type="button" onclick="CheckValue(this.form);" style="padding: 10px;margin-right: 10px;"><i class="bi bi-check-lg green"></i>&nbsp;確定新增</button>
+					<button class="btn btn-primary" type="button" onclick="CheckValue(this.form,$auto_seq);" style="padding: 10px;margin-right: 10px;"><i class="bi bi-check-lg green"></i>&nbsp;確定新增</button>
 					<button class="btn btn-danger" type="button" onclick="parent.myDraw();parent.$.fancybox.close();" style="padding: 10px;"><i class="bi bi-power"></i>&nbsp;關閉</button>
 				</div>
 			</form>
@@ -315,8 +369,8 @@ $style_css
 <script>
 
 function CheckValue(thisform) {
-	xajax_processform(xajax.getFormValues('addForm'));
-	thisform.submit();
+	xajax_processform(xajax.getFormValues('addForm'),$auto_seq);
+
 }
 
 var myDraw = function(){

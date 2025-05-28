@@ -68,6 +68,22 @@ if (isset($_GET['sid']))
 			$smarty->assign('show_center',$show_center);
 			$smarty->assign('xajax_javascript', $xajax->getJavascript('/xajax/'));
 			break;
+		case 'purchaseorder_to_stock_in_add':
+			$title = "採購單轉入庫單";
+			$sid = "view01";
+			$modal = $m_location."/sub_modal/project/func09/purchaseorder_ms/purchaseorder_to_stock_in_add.php";
+			include $modal;
+			$smarty->assign('show_center',$show_center);
+			$smarty->assign('xajax_javascript', $xajax->getJavascript('/xajax/'));
+			break;
+		case 'stock_in':
+			$title = "入庫作業";
+			$sid = "view01";
+			$modal = $m_location."/sub_modal/project/func04/stock_in_ms/stock_in.php";
+			include $modal;
+			$smarty->assign('show_center',$show_center);
+			$smarty->assign('xajax_javascript', $xajax->getJavascript('/xajax/'));
+			break;
 		default:
 			if (empty($sid))
 				$sid = "mbpjitem";

@@ -287,7 +287,6 @@ EOT;
 				<th scope="col" class="text-center" style="width:7%;">採購性質</th>
 				<th scope="col" class="text-center" style="width:25%;">需求說明</th>
 				<th scope="col" class="text-center" style="width:7%;">訂購日期</th>
-				<th scope="col" class="text-center" style="width:7%;">是否到貨</th>
 				<th scope="col" class="text-center" style="width:7%;">到貨日期</th>
 				<th scope="col" class="text-center" style="width:7%;">附檔</th>
 				<th scope="col" class="text-center text-nowrap" style="width:7%;">處理</th>
@@ -370,33 +369,25 @@ $list_view
 				}
 				$('td:eq(3)', nRow).html('<div class="size14 text-center">'+order_date+'</div>');
 
-				var delivered = '';
-					if (aData[4] === 'Y') {
-						delivered = '<span class="text-success"><i class="bi bi-check-circle"></i></span>';
-					} else if (aData[4] === 'N') {
-						delivered = '<span class="text-danger"><i class="bi bi-x-circle"></i></span>';
-					}
-					$('td:eq(4)', nRow).html('<div class="size14 text-center">' + delivered + '</div>');
-
 				var delivery_date = '';
-				if (aData[5] != null && aData[5] != "") {
-					delivery_date = aData[5];
+				if (aData[4] != null && aData[4] != "") {
+					delivery_date = aData[4];
 				}
-				$('td:eq(5)', nRow).html('<div class="size14 text-center">'+delivery_date+'</div>');
+				$('td:eq(4)', nRow).html('<div class="size14 text-center">'+delivery_date+'</div>');
 
 				var status = '';
-				if (aData[7] != null && aData[7] != "") {
-					status = aData[7];
+				if (aData[6] != null && aData[6] != "") {
+					status = aData[6];
 				}
 				
 				var show_btn = '';
 
-				var url1 = "openfancybox_edit('/index.php?ch=edit&auto_seq="+aData[6]+"&fm=$fm',1800,'100%','');";
-				var url3 = "openfancybox_edit('/index.php?tb=purchaseorder&auto_seq="+aData[6]+"&project_id=$project_id&auth_id=$auth_id&fm=pjattach','96%','96%','myDraw();');";
-				var files_total = '<div class="d-flex justify-content-center align-items-center size12 text-center mt-2" id="files_total'+aData[6]+'"></div>';
-				xajax_returnValue('$web_id','$project_id','$auth_id',aData[6],'purchaseorder');
+				var url1 = "openfancybox_edit('/index.php?ch=edit&auto_seq="+aData[5]+"&fm=$fm',1800,'100%','');";
+				var url3 = "openfancybox_edit('/index.php?tb=purchaseorder&auto_seq="+aData[5]+"&project_id=$project_id&auth_id=$auth_id&fm=pjattach','96%','96%','myDraw();');";
+				var files_total = '<div class="d-flex justify-content-center align-items-center size12 text-center mt-2" id="files_total'+aData[5]+'"></div>';
+				xajax_returnValue('$web_id','$project_id','$auth_id',aData[5],'purchaseorder');
 
-				$('td:eq(6)', nRow).html( '<a href="javascript:void(0);" onclick="'+url3+'" title="上傳檔案">'+files_total+'</a>' );
+				$('td:eq(5)', nRow).html( '<a href="javascript:void(0);" onclick="'+url3+'" title="上傳檔案">'+files_total+'</a>' );
 
 				var mdel = "myDel('" + aData[0] + "');";
 				if (status == '已結單') {
@@ -412,7 +403,7 @@ $list_view
 							+ '</div>';
 						}
 				
-				$('td:eq(7)', nRow).html('<div class="text-center">'+show_btn+'</div>');
+				$('td:eq(6)', nRow).html('<div class="text-center">'+show_btn+'</div>');
 
 				return nRow;
 			}

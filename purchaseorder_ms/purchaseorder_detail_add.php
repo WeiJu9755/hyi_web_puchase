@@ -85,7 +85,7 @@ function processform($aFormValues){
 
         $mDB->remove();
 
-		$objResponse->script("parent.stock_in_detail_myDraw();");
+		$objResponse->script("parent.purchaseorder_detail_myDraw();");
 		$objResponse->script("parent.$.fancybox.close();");
 		
 	};

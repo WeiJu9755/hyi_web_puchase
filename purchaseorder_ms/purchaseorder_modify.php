@@ -120,6 +120,8 @@ function execute_purchaseorder($purchase_order_id){
 	if ($mDB->rowCount() > 0) {
 		$row=$mDB->fetchRow(2);
 		$order_date = $row['order_date'];
+		$delivery_date = $row['delivery_date'];
+		$handler_id = $row['handler_id'];
 
 
 		if (($order_date == "") || ($order_date == "0000-00-00")) {
@@ -185,7 +187,7 @@ function execute_purchaseorder($purchase_order_id){
 	$mDB2 = "";
 	$mDB2 = new MywebDB();
 
-	//檢查無問題即可進行入庫作業
+	//檢查無問題即可進行採購作業
 	$Qry="SELECT * FROM purchaseorder_detail
 	where purchase_order_id = '$purchase_order_id'
 	order by auto_seq";
@@ -199,9 +201,96 @@ function execute_purchaseorder($purchase_order_id){
 		}
 	}
 
+	// 建立入庫單編號
+	//自動產生 stock_in_id
+	$mDB3 = "";
+	$mDB3 = new MywebDB();
+	$today = date("Ymd");
+	$Qry3 = "SELECT stock_in_id FROM stock_in WHERE SUBSTRING(stock_in_id,3,8) = '$today' ORDER BY stock_in_id DESC LIMIT 0,1";
+	$mDB3->query($Qry3);
+	if ($mDB3->rowCount() > 0) {
+	$row=$mDB3->fetchRow(2);
+	$temp_stock_in_id = $row['stock_in_id'];
+	$str4 = substr($temp_stock_in_id,-4,4);
+	$num = (int)$str4+1;
+	$filled_int = sprintf("%04d", $num);
+	$stock_in_id = "SI".$today.$filled_int;
+	} else {
+		$stock_in_id = "SI".$today."0001";
+		
+	}
+	$mDB3->remove();
+
+	// 建立入庫單
+	$mDB4 = "";
+	$mDB4 = new MywebDB();
+	$stock_in_type 		= "採購入庫";
+	$source_code 		= "採購供應商";
+	$Qry4="insert into stock_in (stock_in_id,stock_in_date,stock_in_type,handler_id,source_code,create_date,last_modify) values ('$stock_in_id','$delivery_date','$stock_in_type','$handler_id','$source_code',now(),now())";
+	$mDB4->query($Qry4);
+
+
+	$mDB5 = "";
+	$mDB5 = new MywebDB();
+	$mDB6 = "";
+	$mDB6 = new MywebDB();
+	$mDB7 = "";
+	$mDB7 = new MywebDB();
+	// 取得採購單資料，並直接新增入庫至stock_in_detail
+	$Qry5 = "SELECT a.auto_seq,a.supplier_id,b.* FROM purchaseorder a
+		LEFT JOIN purchaseorder_detail b ON a.purchase_order_id = b.purchase_order_id
+		where a.purchase_order_id = '$purchase_order_id'";
+
+	$mDB5->query($Qry5);
+	if ($mDB5->rowCount() > 0) {
+		while ($row=$mDB5->fetchRow(2)) {
+			$material_no = $row['material_no'];
+			$warehouse = $row['warehouse'];
+			$location_id = $row['location_id'];
+			$stock_in_qty = $row['purchase_qty'];
+			$unit_price = $row['unit_price'];
+			$remarks = $row['remarks'];
+			$supplier_id = $row['supplier_id'];
+			$Qry6 = "INSERT INTO `stock_in_detail` (
+									`stock_in_id`,
+									`material_no`,
+									`warehouse`,
+									`location_id`,
+									`stock_in_qty`,
+									`unit_price`,
+									`remarks`,
+									`create_date`,
+									`last_modify`
+									) VALUES (
+									'$stock_in_id',    -- 入庫單號
+									'$material_no',    -- 材料編號
+									'$warehouse',      -- 倉庫名稱
+									'$location_id',    -- 儲位編號
+									$stock_in_qty,     -- 入庫數量
+									$unit_price,       -- 單價
+									'$remarks',        -- 備註
+									NOW(),             -- 建立時間
+									NOW()              -- 最後修改時間
+									);";
+			$mDB6->query($Qry6);
+			
+			// 更新入庫單基本資料
+			$Qry7 = "UPDATE `stock_in` SET `supplier_id` = '$supplier_id' WHERE `stock_in_id` = '$stock_in_id';";
+			$mDB7->query($Qry7);
+		}
+		$mDB4->remove();
+		$mDB5->remove();
+		$mDB6->remove();
+		$mDB7->remove();
+
+	}
+	
+
+
 	//更新主檔狀態
 	$Qry="UPDATE purchaseorder set
-			status	= '已結單'
+			status				= '已結單'
+			,stock_in_id		= '$stock_in_id'
 			,last_modify		= now()
 			where purchase_order_id = '$purchase_order_id'";
 	$mDB->query($Qry);
@@ -212,18 +301,14 @@ function execute_purchaseorder($purchase_order_id){
 	
     //$objResponse->script("oTable = $('#purchaseorder_detail_table').dataTable();oTable.fnDraw(false)");
 	$objResponse->script("parent.myDraw();");
-	$objResponse->script("autoclose('提示', '已完成結單並執行入庫！', 500);");
+	$objResponse->script("autoclose('提示', '採購入庫作業已完成！',3000);");
 	// $objResponse->script("parent.$.fancybox.close();");
 	// 等待 1 秒後自動重新整理頁面（讓使用者看到提示）
-	$objResponse->script("setTimeout(function(){ location.reload(); }, 500);");
+	$objResponse->script("setTimeout(function(){ location.reload(); }, 1500);");
 
 
 	return $objResponse;
 	
-}
-
-function to_stock_in_add($auto_seq){
-
 }
 
 $xajax->processRequest();
@@ -261,6 +346,7 @@ if ($total > 0) {
 	$status = $row['status'];
 	$employee_name = $row['employee_name'];
 	$delivery_date = $row['delivery_date'];
+	$stock_in_id = $row['stock_in_id'];
 	$requirement_description = $row['requirement_description'];
 	$last_modify = $row['last_modify'];
   
@@ -352,12 +438,14 @@ $show_fellow_btn2 = "";
 if ($status == "未結單") {
 $show_fellow_btn2=<<<EOT
 <div class="btn-group" role="group">
-	<button type="button" id="execute_purchase_btn" class="btn btn-success btn-sm text-nowrap px-3" onclick="CheckValue(this.form);execute_purchaseorder('$purchase_order_id');"><i class="bi bi-box-arrow-in-down"></i>&nbsp;結單作業</button>
+	<button type="button" id="execute_purchase_btn" class="btn btn-success btn-sm text-nowrap px-3" onclick="CheckValue(this.form);execute_purchaseorder('$purchase_order_id');"><i class="bi bi-box-arrow-in-down"></i>&nbsp;結單作業，並新增入庫單</button>
 </div>
 EOT; 
 } else if ($status == "已結單") {
 $show_fellow_btn2=<<<EOT
-<div class="size14 weight red">此單已於 $last_modify 結單完成入庫</div>
+<div class="size14 weight">
+  <span style="color:blue;">入庫編號 : $stock_in_id</span>
+</div>
 
 EOT; 
 $disabled = "disabled";
@@ -377,18 +465,27 @@ EOT;
 <div class="btn-group" role="group">
 	<button $disabled type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="CheckValue(this.form);openfancybox_edit('/index.php?ch=purchaseorder_detail_add&auto_seq=$auto_seq&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
 	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="purchaseorder_detail_myDraw();"><i class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
-	<button type="button" id="execute_purchase_btn" class="btn btn-warning btn-sm text-nowrap px-3" onclick="window.location='/?ch=purchaseorder_to_stock_in_add&auto_seq=$auto_seq&fm=$fm';"><i class="bi bi-box-arrow-in-down"></i>&nbsp;入庫作業</button>
 </div>
 EOT; 
 }
 $show_savebtn=<<<EOT
 <div class="btn-group vbottom" role="group" style="margin-top:5px;">
-	<button $disabled id="save" class="btn btn-primary" type="button" onclick="CheckValue(this.form);" style="padding: 5px 15px;"><i class="bi bi-check-circle"></i>&nbsp;存檔</button>
+	<button id="save" class="btn btn-primary" type="button" onclick="CheckValue(this.form);" style="padding: 5px 15px;"><i class="bi bi-check-circle"></i>&nbsp;存檔</button>
 	<button $disabled id="cancel" class="btn btn-secondary display_none" type="button" onclick="setCancel();" style="padding: 5px 15px;"><i class="bi bi-x-circle"></i>&nbsp;取消</button>
 	<button id="close" class="btn btn-danger" type="button" onclick="parent.myDraw();parent.$.fancybox.close();" style="padding: 5px 15px;"><i class="bi bi-power"></i>&nbsp;關閉</button>
 </div>
 EOT;
 
+$show_status = "";
+if ($status == "未結單") {
+	$show_status =<<<EOT
+	<div class="field_div3 pt-3">$status</div>
+	EOT;
+}else if ($status == "已結單"){
+	$show_status =<<<EOT
+	<div class="field_div3 pt-3" style="color:red;">此單已於 $last_modify 結單</div>
+	EOT;
+}
 
 $show_center=<<<EOT
 <script src="/os/Autogrow-Textarea/jquery.autogrowtextarea.min.js"></script>
@@ -491,8 +588,8 @@ $style_css
 								</div> 
 							</div> 
 								<div class="col-lg-6 col-sm-12 col-md-12">
-								<div class="field_div1">狀態:</div> 
-								<div class="field_div3 pt-3">$status</div> 
+								<div class="field_div1">狀態:</div>
+								$show_status
 							</div> 
 						</div>
 

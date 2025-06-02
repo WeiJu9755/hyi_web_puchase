@@ -33,7 +33,7 @@ function processform($aFormValues){
 		return $objResponse;
 		exit;
 	}
-	if ((int)trim($aFormValues['stock_in_qty']) < 1)	{
+	if ((int)trim($aFormValues['purchase_qty']) < 1)	{
 		$objResponse->script("jAlert('警示', '入庫數量不可小於1', 'red', '', 2000);");
 		return $objResponse;
 		exit;
@@ -50,10 +50,10 @@ function processform($aFormValues){
 		$templates			= trim($aFormValues['templates']);
 		$web_id				= trim($aFormValues['web_id']);
 		$auto_seq			= trim($aFormValues['auto_seq']);
-		$stock_in_id		= trim($aFormValues['stock_in_id']);
+		$purchase_order_id		= trim($aFormValues['purchase_order_id']);
 		$material_no		= trim($aFormValues['material_no']);
 		$warehouse			= trim($aFormValues['warehouse']);
-		$stock_in_qty		= trim($aFormValues['stock_in_qty']);
+		$purchase_qty		= trim($aFormValues['purchase_qty']);
 		$unit_price			= trim($aFormValues['unit_price']);
 		$remarks			= trim($aFormValues['remarks']);
 		$memberID			= trim($aFormValues['memberID']);
@@ -64,9 +64,9 @@ function processform($aFormValues){
 		$mDB = "";
 		$mDB = new MywebDB();
 
-		$Qry="UPDATE stock_in_detail set
+		$Qry="UPDATE purchaseorder_detail set
 				 warehouse			= '$warehouse'
-				,stock_in_qty		= '$stock_in_qty'
+				,purchase_qty		= '$purchase_qty'
 				,unit_price			= '$unit_price'
 				,remarks			= '$remarks'
 				,last_modify		= now()
@@ -76,7 +76,7 @@ function processform($aFormValues){
 
         $mDB->remove();
 
-		$objResponse->script("parent.stock_in_detail_myDraw();");
+		$objResponse->script("parent.purchaseorder_detail_myDraw();");
 		$objResponse->script("parent.$.fancybox.close();");
 		
 	};
@@ -92,15 +92,10 @@ $auto_seq = $_GET['auto_seq'];
 $mess_title = $title;
 
 
-//從 dispatch 取得 team_id
-//$dispatch_row = getkeyvalue2($site_db."_info","dispatch","stock_in_id = '$stock_in_id'","team_id");
-//$team_id =$dispatch_row['team_id'];
-
-
 $mDB = "";
 $mDB = new MywebDB();
 
-$Qry="SELECT a.*,b.material_name,b.specification,b.unit FROM stock_in_detail a
+$Qry="SELECT a.*,b.material_name,b.specification,b.unit FROM purchaseorder_detail a
 LEFT JOIN inventory b ON b.material_no = a.material_no
 WHERE a.auto_seq = '$auto_seq'";
 $mDB->query($Qry);
@@ -108,13 +103,13 @@ $total = $mDB->rowCount();
 if ($total > 0) {
     //已找到符合資料
 	$row=$mDB->fetchRow(2);
-	$stock_in_id = $row['stock_in_id'];
+	$purchase_order_id = $row['purchase_order_id'];
 	$material_no = $row['material_no'];
 	$material_name = $row['material_name'];
 	$specification = $row['specification'];
 	$unit = $row['unit'];
 	$warehouse = $row['warehouse'];
-	$stock_in_qty = $row['stock_in_qty'];
+	$purchase_qty = $row['purchase_qty'];
 	$unit_price = $row['unit_price'];
 	$remarks = $row['remarks'];
 	$last_modify = $row['last_modify'];
@@ -236,7 +231,7 @@ $style_css
 					<div>
 						<div class="field_div1">入庫數量:</div> 
 						<div class="field_div2">
-							<input type="text" class="inputtext w-100" id="stock_in_qty" name="stock_in_qty" value="$stock_in_qty" style="width:100%;max-width:180px;"/>
+							<input type="text" class="inputtext w-100" id="purchase_qty" name="purchase_qty" value="$purchase_qty" style="width:100%;max-width:180px;"/>
 						</div> 
 					</div>
 					<div>
@@ -275,7 +270,7 @@ function CheckValue(thisform) {
 
 var myDraw = function(){
 	var oTable;
-	oTable = parent.$('#stock_in_detail_table').dataTable();
+	oTable = parent.$('#purchaseorder_detail_table').dataTable();
 	oTable.fnDraw(false);
 }
 	

@@ -64,7 +64,7 @@ function processform($aFormValues,$auto_seq){
 	$mDB4 = "";
 	$mDB4 = new MywebDB();
 	
-	//檢查帳號是否重複
+	//檢查編號是否重複
 	$Qry="select stock_in_id from stock_in where stock_in_id = '$stock_in_id'";
 	$mDB->query($Qry);
 	$total = $mDB->rowCount();

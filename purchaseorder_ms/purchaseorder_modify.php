@@ -236,6 +236,8 @@ function execute_purchaseorder($purchase_order_id){
 	$mDB6 = new MywebDB();
 	$mDB7 = "";
 	$mDB7 = new MywebDB();
+
+	
 	// 取得採購單資料，並直接新增入庫至stock_in_detail
 	$Qry5 = "SELECT a.auto_seq,a.supplier_id,b.* FROM purchaseorder a
 		LEFT JOIN purchaseorder_detail b ON a.purchase_order_id = b.purchase_order_id
@@ -243,73 +245,76 @@ function execute_purchaseorder($purchase_order_id){
 
 	$mDB5->query($Qry5);
 	if ($mDB5->rowCount() > 0) {
-		while ($row=$mDB5->fetchRow(2)) {
-			$material_no = $row['material_no'];
-			$warehouse = $row['warehouse'];
-			$location_id = $row['location_id'];
-			$stock_in_qty = $row['purchase_qty'];
-			$unit_price = $row['unit_price'];
-			$remarks = $row['remarks'];
-			$supplier_id = $row['supplier_id'];
-			$Qry6 = "INSERT INTO `stock_in_detail` (
-									`stock_in_id`,
-									`material_no`,
-									`warehouse`,
-									`location_id`,
-									`stock_in_qty`,
-									`unit_price`,
-									`remarks`,
-									`create_date`,
-									`last_modify`
-									) VALUES (
-									'$stock_in_id',    -- 入庫單號
-									'$material_no',    -- 材料編號
-									'$warehouse',      -- 倉庫名稱
-									'$location_id',    -- 儲位編號
-									$stock_in_qty,     -- 入庫數量
-									$unit_price,       -- 單價
-									'$remarks',        -- 備註
-									NOW(),             -- 建立時間
-									NOW()              -- 最後修改時間
-									);";
+		while ($row = $mDB5->fetchRow(2)) {
+			$material_no   = $row['material_no'];
+			$warehouse     = $row['warehouse'];
+			$location_id   = $row['location_id'];
+			$stock_in_qty  = $row['purchase_qty'];
+			$unit_price    = $row['unit_price'];
+			$remarks       = $row['remarks'];
+			$supplier_id   = $row['supplier_id'];
+
+			// 新增入庫明細資料
+			$Qry6 = "
+				INSERT INTO `stock_in_detail` (
+					`stock_in_id`,
+					`material_no`,
+					`warehouse`,
+					`location_id`,
+					`stock_in_qty`,
+					`unit_price`,
+					`remarks`,
+					`create_date`,
+					`last_modify`
+				) VALUES (
+					'$stock_in_id',    -- 入庫單號
+					'$material_no',    -- 材料編號
+					'$warehouse',      -- 倉庫名稱
+					'$location_id',    -- 儲位編號
+					$stock_in_qty,     -- 入庫數量
+					$unit_price,       -- 單價
+					'$remarks',        -- 備註
+					NOW(),             -- 建立時間
+					NOW()              -- 最後修改時間
+				);
+			";
 			$mDB6->query($Qry6);
-			
-			// 更新入庫單基本資料
-			$Qry7 = "UPDATE `stock_in` SET `supplier_id` = '$supplier_id' WHERE `stock_in_id` = '$stock_in_id';";
+
+			// 更新入庫單基本資料的供應商編號
+			$Qry7 = "
+				UPDATE `stock_in`
+				SET `supplier_id` = '$supplier_id'
+				WHERE `stock_in_id` = '$stock_in_id';
+			";
 			$mDB7->query($Qry7);
 		}
-		$mDB4->remove();
-		$mDB5->remove();
-		$mDB6->remove();
-		$mDB7->remove();
-
 	}
-	
+		
 
 
-	//更新主檔狀態
-	$Qry="UPDATE purchaseorder set
-			status				= '已結單'
-			,stock_in_id		= '$stock_in_id'
-			,last_modify		= now()
-			where purchase_order_id = '$purchase_order_id'";
-	$mDB->query($Qry);
+		//更新主檔狀態
+		$Qry="UPDATE purchaseorder set
+				status				= '已結單'
+				,stock_in_id		= '$stock_in_id'
+				,last_modify		= now()
+				where purchase_order_id = '$purchase_order_id'";
+		$mDB->query($Qry);
 
 
-	$mDB2->remove();
-	$mDB->remove();
-	
-    //$objResponse->script("oTable = $('#purchaseorder_detail_table').dataTable();oTable.fnDraw(false)");
-	$objResponse->script("parent.myDraw();");
-	$objResponse->script("autoclose('提示', '採購入庫作業已完成！',3000);");
-	// $objResponse->script("parent.$.fancybox.close();");
-	// 等待 1 秒後自動重新整理頁面（讓使用者看到提示）
-	$objResponse->script("setTimeout(function(){ location.reload(); }, 1500);");
+		$mDB2->remove();
+		$mDB->remove();
+		
+		//$objResponse->script("oTable = $('#purchaseorder_detail_table').dataTable();oTable.fnDraw(false)");
+		$objResponse->script("parent.myDraw();");
+		$objResponse->script("autoclose('提示', '採購入庫作業已完成！',3000);");
+		// $objResponse->script("parent.$.fancybox.close();");
+		// 等待 1 秒後自動重新整理頁面（讓使用者看到提示）
+		$objResponse->script("setTimeout(function(){ location.reload(); }, 1500);");
 
 
-	return $objResponse;
-	
-}
+		return $objResponse;
+		
+	}
 
 $xajax->processRequest();
 

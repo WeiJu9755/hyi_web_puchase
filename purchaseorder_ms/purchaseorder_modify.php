@@ -301,8 +301,94 @@ function execute_purchaseorder($purchase_order_id){
 		$mDB->query($Qry);
 
 
+	// 自動執行入庫作業
+
+		//檢查無問題即可進行入庫作業
+	$Qry="SELECT * FROM stock_in_detail
+	where stock_in_id = '$stock_in_id'
+	order by auto_seq";
+	$mDB->query($Qry);
+	if ($mDB->rowCount() > 0) {
+		while ($row=$mDB->fetchRow(2)) {
+			$material_no = $row['material_no'];
+			$warehouse = $row['warehouse'];
+			$stock_in_qty = $row['stock_in_qty'];
+			$unit_price = $row['unit_price'];
+
+			$total_amt = $stock_in_qty*$unit_price;
+
+			//必須先取得原庫存總庫存量及單價
+			$Qry2="SELECT * FROM inventory
+			WHERE material_no = '$material_no'";
+			$mDB2->query($Qry2);
+			if ($mDB2->rowCount() > 0) {
+				$row2=$mDB2->fetchRow(2);
+				$org_unit_price = $row2['unit_price'];
+				$stock_qty = $row2['stock_qty'];
+
+				$sum_stock_qty = $stock_qty+$stock_in_qty;
+
+				//加權移動平均
+				$avg_unit_price = round((($org_unit_price*$stock_qty)+($unit_price*$stock_in_qty))/$sum_stock_qty,4);
+
+
+				//更新倉庫子檔內容
+				//檢查是否已有此倉庫
+				$Qry2="SELECT * FROM inventory_sub
+				WHERE material_no = '$material_no' AND warehouse = '$warehouse'";
+				$mDB2->query($Qry2);
+				if ($mDB2->rowCount() > 0) {
+					$row2=$mDB2->fetchRow(2);
+					$auto_seq = $row2['auto_seq'];
+					//已存在則進行更新
+					$Qry2="UPDATE inventory_sub SET
+							stock_qty			= stock_qty + '$stock_in_qty'
+							,last_modify		= NOW()
+							WHERE auto_seq = '$auto_seq'";
+					$mDB2->query($Qry2);
+
+				} else {
+					//不存在則新增
+					$Qry2="INSERT INTO inventory_sub (material_no,warehouse,stock_qty,last_modify) VALUES ('$material_no','$warehouse','$stock_in_qty',NOW())";
+					$mDB2->query($Qry2);
+				}
+
+				//更新庫存料件資料
+				/*
+				$Qry2="UPDATE inventory set
+						unit_price			= ROUND(((stock_qty*unit_price) + '$total_amt')/(stock_qty + '$stock_in_qty'),4)
+						,stock_qty			= stock_qty + '$stock_in_qty'
+						,last_modify		= now()
+						where material_no = '$material_no'";
+				$mDB2->query($Qry2);
+				*/
+				$Qry2="UPDATE inventory set
+						unit_price			= '$avg_unit_price'
+						,stock_qty			= '$sum_stock_qty'
+						,last_modify		= now()
+						where material_no = '$material_no'";
+				$mDB2->query($Qry2);
+
+			}
+
+
+		}
+	}
+	//更新主檔狀態
+	$Qry="UPDATE stock_in set
+			status	= '已入庫'
+			,last_modify		= now()
+			where stock_in_id = '$stock_in_id'";
+	$mDB->query($Qry);
+
+
 		$mDB2->remove();
 		$mDB->remove();
+		$mDB3->remove();
+		$mDB4->remove();
+		$mDB5->remove();
+		$mDB6->remove();
+		$mDB7->remove();
 		
 		//$objResponse->script("oTable = $('#purchaseorder_detail_table').dataTable();oTable.fnDraw(false)");
 		$objResponse->script("parent.myDraw();");

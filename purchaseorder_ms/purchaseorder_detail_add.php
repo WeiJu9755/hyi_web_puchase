@@ -208,6 +208,8 @@ EOT;
 
 }
 
+$m_location		= "/smarty/templates/".$site_db."/".$templates;
+$ajax_get_inventory = $m_location."/sub_modal/project/func09/purchaseorder_ms/ajax_get_inventory.php";
 
 $show_center=<<<EOT
 <script src="/os/Autogrow-Textarea/jquery.autogrowtextarea.min.js"></script>
@@ -304,6 +306,43 @@ $(document).ready(async function() {
 	$('#material_no').focus();
 });
 
+$('#material_no').on('input', function() {
+    var material_no = $(this).val();  // 即時取得 input 的值
+    //$('#material_info').text(material_no);   // 顯示在畫面上
+	if (material_no !== '') {
+		$.ajax({
+			url: '$ajax_get_inventory', // 後端 PHP 檔案
+			method: 'POST',
+			data: { site_db : '$site_db', material_no: material_no },
+			dataType: 'json',
+			success: function (response) {
+				if (response.success) {
+					$('#material_info').text(response.material_name+' '+response.specification);
+
+					var warehouse_select = $('#warehouse');
+      				warehouse_select.empty(); // 清空原本的選單
+
+					var warehouse_list = response.warehouse_list;
+					
+					$.each(response.warehouse_list, function(index, warehouse) {
+        				warehouse_select.append($('<option></option>').val(warehouse).text(warehouse));
+      				});
+
+				} else {
+					$('#material_info').text('');
+				}
+
+			},
+			error: function () {
+		    	$('#material_info').text('');   // 顯示在畫面上
+			}
+		});
+
+	} else {
+    	$('#material_info').text('');   // 顯示在畫面上
+	}
+
+  });
 </script>
 EOT;
 

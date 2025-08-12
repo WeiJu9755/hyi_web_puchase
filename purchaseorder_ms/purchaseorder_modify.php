@@ -48,39 +48,23 @@ function processform($aFormValues){
 
 
 $xajax->registerFunction("SaveValue");
-function SaveValue($aFormValues){
+function SaveValue($aFormValues) {
+    $objResponse = new xajaxResponse();
 
+    $mDB = new MywebDB();
+    $Qry = "UPDATE purchaseorder SET
+                order_date = '{$aFormValues['order_date']}',
+                supplier_id = '{$aFormValues['supplier_id']}',
+                handler_id = '{$aFormValues['handler_id']}',
+                requirement_description = '{$aFormValues['requirement_description']}',
+                delivery_date = '{$aFormValues['delivery_date']}',
+                last_modify = NOW()
+            WHERE purchase_order_id = '{$aFormValues['purchase_order_id']}'";
+    $mDB->query($Qry);
+    $mDB->remove();
 
-	$objResponse = new xajaxResponse();
-	
-		//進行存檔動作
-		$site_db						= trim($aFormValues['site_db']);
-		$purchase_order_id				= trim($aFormValues['purchase_order_id']);
-		$order_date						= trim($aFormValues['order_date']);
-		$supplier_id					= trim($aFormValues['supplier_id']);
-		$handler_id						= trim($aFormValues['handler_id']);
-		$requirement_description		= trim($aFormValues['requirement_description']);
-		$delivery_date 					= trim($aFormValues['delivery_date']);
-		$memberID						= trim($aFormValues['memberID']);
-		
-		//存入實體資料庫中
-		$mDB = "";
-		$mDB = new MywebDB();
-
-		$Qry="UPDATE purchaseorder set
-				 order_date							= '$order_date'
-				,supplier_id						= '$supplier_id'
-				,handler_id							= '$handler_id'
-				,requirement_description			= '$requirement_description'
-				,delivery_date						= '$delivery_date'
-				,last_modify						= now()
-				where purchase_order_id 			= '$purchase_order_id'";
-				
-		$mDB->query($Qry);
-        $mDB->remove();
-
-		
-	return $objResponse;
+   $objResponse->script("autoclose('提示', '存檔完成!', 500);");
+    return $objResponse;
 }
 
 $xajax->registerFunction("purchaseorder_detailDeleteRow");
@@ -548,20 +532,20 @@ if ($status == "未結單") {
 $show_fellow_btn=<<<EOT
 <div class="btn-group" role="group">
 	<button $disabled type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="CheckValue(this.form);openfancybox_edit('/index.php?ch=purchaseorder_detail_add&auto_seq=$auto_seq&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
-	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="purchaseorder_detail_myDraw();"><i class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
+	<button id="refreshBtn" type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="purchaseorder_detail_myDraw();"><i id="refreshIcon" class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
 </div>
 EOT; 
 }else if ($status == "已結單") {
 	$show_fellow_btn=<<<EOT
 <div class="btn-group" role="group">
 	<button $disabled type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="CheckValue(this.form);openfancybox_edit('/index.php?ch=purchaseorder_detail_add&auto_seq=$auto_seq&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
-	<button type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="purchaseorder_detail_myDraw();"><i class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
+	<button id="refreshBtn" type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="purchaseorder_detail_myDraw();"><i id="refreshIcon" class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
 </div>
 EOT; 
 }
 $show_savebtn=<<<EOT
 <div class="btn-group vbottom" role="group" style="margin-top:5px;">
-	<button id="save" class="btn btn-primary" type="button" onclick="CheckValue(this.form);" style="padding: 5px 15px;"><i class="bi bi-check-circle"></i>&nbsp;存檔</button>
+	<button id="save" class="btn btn-primary" type="button" onclick="callSaveValue(this.form);" style="padding: 5px 15px;"><i class="bi bi-check-circle"></i>&nbsp;存檔</button>
 	<button $disabled id="cancel" class="btn btn-secondary display_none" type="button" onclick="setCancel();" style="padding: 5px 15px;"><i class="bi bi-x-circle"></i>&nbsp;取消</button>
 	<button id="close" class="btn btn-danger" type="button" onclick="parent.myDraw();parent.$.fancybox.close();" style="padding: 5px 15px;"><i class="bi bi-power"></i>&nbsp;關閉</button>
 </div>
@@ -736,9 +720,8 @@ function CheckValue(thisform) {
 	thisform.submit();
 }
 
-function SaveValue(thisform) {
-	xajax_SaveValue(xajax.getFormValues('modifyForm'));
-	thisform.submit();
+function callSaveValue(thisform) {
+    xajax_SaveValue(xajax.getFormValues('modifyForm'));
 }
 
 function setEdit() {
@@ -782,9 +765,26 @@ var execute_purchaseorder = function(purchase_order_id){
 
 };
 
+var purchaseorder_detail_myDraw = function(){
+    // 變成 loading 圖示
+    document.getElementById('refreshIcon').classList.add('spinner-border', 'spinner-border-sm');
+    document.getElementById('refreshIcon').classList.remove('bi', 'bi-arrow-repeat');
+
+    var oTable = $('#purchaseorder_detail_table').dataTable();
+    oTable.fnDraw(false);
+
+    // 0.5 秒後恢復原圖示
+    setTimeout(function(){
+        document.getElementById('refreshIcon').classList.remove('spinner-border', 'spinner-border-sm');
+        document.getElementById('refreshIcon').classList.add('bi', 'bi-arrow-repeat');
+    }, 500);
+}
+
+
 
 $(document).ready(async function() {
 	//等待其他資源載入完成，此方式適用大部份瀏覽器
+	consle.log("等待其他資源載入完成...");
 	await new Promise(resolve => setTimeout(resolve, 100));
 	$('#order_date').focus();
 });

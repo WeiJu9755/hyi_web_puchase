@@ -50,6 +50,7 @@ function processform($aFormValues){
 $xajax->registerFunction("SaveValue");
 function SaveValue($aFormValues) {
     $objResponse = new xajaxResponse();
+	$memberID = $_SESSION['memberID'];
 
     $mDB = new MywebDB();
     $Qry = "UPDATE purchaseorder SET
@@ -58,7 +59,8 @@ function SaveValue($aFormValues) {
                 handler_id = '{$aFormValues['handler_id']}',
                 requirement_description = '{$aFormValues['requirement_description']}',
                 delivery_date = '{$aFormValues['delivery_date']}',
-                last_modify = NOW()
+                last_modify = NOW() ,
+				memeberID = '$memberID'
             WHERE purchase_order_id = '{$aFormValues['purchase_order_id']}'";
     $mDB->query($Qry);
     $mDB->remove();
@@ -204,7 +206,7 @@ function execute_purchaseorder($purchase_order_id){
 		
 	}
 	$mDB3->remove();
-
+	$memberID = $_SESSION['memberID'];
 	// 建立入庫單
 	$mDB4 = "";
 	$mDB4 = new MywebDB();
@@ -281,6 +283,7 @@ function execute_purchaseorder($purchase_order_id){
 				status				= '已結單'
 				,stock_in_id		= '$stock_in_id'
 				,last_modify		= now()
+				,memeberID			= '$memberID'
 				where purchase_order_id = '$purchase_order_id'";
 		$mDB->query($Qry);
 
@@ -401,10 +404,27 @@ $mess_title = $title;
 $mDB = "";
 $mDB = new MywebDB();
 
-$Qry="SELECT a.*,b.employee_name,c.contract_caption FROM purchaseorder a
+$Qry = "SELECT 
+    a.purchase_order_id,
+    a.order_date,
+    a.purchase_type,
+    a.contract_id AS purchase_contract_id, 
+    c.contract_id AS contract_table_id,
+    c.contract_caption,
+    a.contract_type,
+    a.supplier_id,
+    a.handler_id,
+    a.status,
+    b.employee_name,
+    a.delivery_date,
+    a.stock_in_id,
+    a.requirement_description,
+    a.last_modify
+FROM purchaseorder a
 LEFT JOIN employee b ON b.employee_id = a.handler_id
 LEFT JOIN contract c ON c.contract_id = a.contract_id
-WHERE a.auto_seq = '$auto_seq'";
+WHERE a.auto_seq = '$auto_seq'
+";
 $mDB->query($Qry);
 $total = $mDB->rowCount();
 if ($total > 0) {
@@ -413,7 +433,9 @@ if ($total > 0) {
 	$purchase_order_id = $row['purchase_order_id'];
 	$order_date = $row['order_date'];
 	$purchase_type = $row['purchase_type'];
-	$contract_id = $row['contract_id'];
+	$purchase_contract_id = $row['purchase_contract_id']; // 來自 purchaseorder
+	$_SESSION['contract_id'] = $purchase_contract_id;
+	$contract_table_id = $row['contract_table_id'];       // 來自 contract
 	$contract_name = $row['contract_caption'];
 	$contract_type = $row['contract_type'];
 	$supplier_id = $row['supplier_id'];
@@ -531,14 +553,14 @@ $show_fellow_btn = "";
 if ($status == "未結單") {
 $show_fellow_btn=<<<EOT
 <div class="btn-group" role="group">
-	<button $disabled type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="CheckValue(this.form);openfancybox_edit('/index.php?ch=purchaseorder_detail_add&auto_seq=$auto_seq&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
+	<button $disabled type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="CheckValue(this.form);openfancybox_edit('/index.php?ch=purchaseorder_detail_add&contract_id=$purchase_contract_id&supplier_id=$supplier_id&auto_seq=$auto_seq&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
 	<button id="refreshBtn" type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="purchaseorder_detail_myDraw();"><i id="refreshIcon" class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
 </div>
 EOT; 
 }else if ($status == "已結單") {
 	$show_fellow_btn=<<<EOT
 <div class="btn-group" role="group">
-	<button $disabled type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="CheckValue(this.form);openfancybox_edit('/index.php?ch=purchaseorder_detail_add&auto_seq=$auto_seq&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
+	<button $disabled type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="CheckValue(this.form);openfancybox_edit('/index.php?ch=purchaseorder_detail_add&contract_id=$purchase_contract_id&supplier_id=$supplier_id&auto_seq=$auto_seq&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
 	<button id="refreshBtn" type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="purchaseorder_detail_myDraw();"><i id="refreshIcon" class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
 </div>
 EOT; 
@@ -586,6 +608,7 @@ $style_css
 							<div class="col-lg-12 col-sm-12 col-md-12">
 								<div class="field_div1">採購編號:</div>
 								<div class="field_div2"><div class="blue weight mt-2">$purchase_order_id</div></div>
+								
 							</div> 
 						</div>
 					</div>

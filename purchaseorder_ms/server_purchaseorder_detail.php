@@ -13,7 +13,7 @@
 	/* Array of database columns which should be read and sent back to DataTables. Use a space where
 	 * you want to insert a non-database field (for example a counter or static image)
 	 */
-	$aColumns = array( 'a.material_no','b.material_name','b.unit','a.warehouse','a.purchase_qty','a.unit_price','a.location_id','a.remarks','a.auto_seq','a.purchase_order_id','a.last_modify','b.specification');
+	$aColumns = array( 'a.material_no','b.material_name','b.unit','a.warehouse','a.purchase_qty','a.unit_price','a.location_id','a.remarks','a.auto_seq','a.seq','a.work_project','a.purchase_order_id','a.last_modify','b.specification');
 	
 	/* Indexed column (used for fast and accurate table cardinality) */
 	$sIndexColumn = "auto_seq";

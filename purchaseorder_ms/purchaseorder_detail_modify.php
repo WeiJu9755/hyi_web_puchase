@@ -106,6 +106,8 @@ if ($total > 0) {
 	$purchase_order_id = $row['purchase_order_id'];
 	$material_no = $row['material_no'];
 	$material_name = $row['material_name'];
+	$seq = $row['seq'];
+	$work_project = $row['work_project'];
 	$specification = $row['specification'];
 	$unit = $row['unit'];
 	$warehouse = $row['warehouse'];
@@ -220,6 +222,11 @@ $style_css
 							<div id="material_info">$material_name</div>
 						</div> 
 					</div>
+					<div>
+						<div class="field_div1">合約項次:</div> 
+						<div class="field_div2"><div class="weight mt-2">$seq.   $work_project</div></div>
+					</div>
+					
 					<div>
 						<div class="field_div1">倉庫別:</div> 
 						<div class="field_div2">

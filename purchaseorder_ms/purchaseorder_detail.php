@@ -16,6 +16,7 @@ if( $detect->isMobile() && !$detect->isTablet() ){
 
 
 $fm = $_GET['fm'];
+$contract_id = $_SESSION['contract_id'];
 
 
 $sure_to_delete = getlang("您確定要刪除此筆資料嗎?");
@@ -39,6 +40,7 @@ $list_view=<<<EOT
 				<th scope="col" class="text-center text-nowrap" style="width:15%;">物料編碼</th>
 				<th scope="col" class="text-center text-nowrap" style="width:25%;">物料名稱/規格</th>
 				<th scope="col" class="text-center text-nowrap" style="width:5%;">單位</th>
+				<th scope="col" class="text-center text-nowrap" style="width:5%;">合約項次</th>
 				<th scope="col" class="text-center text-nowrap" style="width:8%;">倉庫別</th>
 				<th scope="col" class="text-center text-nowrap" style="width:8%;">入庫數量</th>
 				<th scope="col" class="text-center text-nowrap" style="width:10%;">單價</th>
@@ -109,8 +111,8 @@ $list_view
 				//物料名稱/規格
 				var material_name = "";
 				if (aData[1] != null && aData[1] != "") {
-					if (aData[11] != null && aData[11] != "") {
-						material_name = '<div class="size14 weight">'+aData[1]+'</div><div class="size12">'+aData[11]+'</div>';
+					if (aData[13] != null && aData[13] != "") {
+						material_name = '<div class="size14 weight">'+aData[1]+'</div><div class="size12">'+aData[13]+'</div>';
 					} else {
 						material_name = '<div class="size14 weight">'+aData[1]+'</div>';
 					}
@@ -125,37 +127,53 @@ $list_view
 
 				$('td:eq(2)', nRow).html( '<div class="d-flex justify-content-center align-items-center size14 text-center" style="height:auto;min-height:32px;">'+unit+'</div>' );
 
+				// 合約項次
+				var contract_seq = aData[9] || "";
+				var work_project = aData[10] || "";
+
+				// 用 Bootstrap Tooltip
+				var show = $('<div class="d-flex justify-content-center align-items-center size14 text-center" ' +
+							'style="height:auto;min-height:32px;" ' +
+							'data-bs-toggle="tooltip" data-bs-placement="top" title="' + work_project + '">' +
+							contract_seq +
+							'</div>');
+
+				$('td:eq(3)', nRow).html(show);
+
+				// 初始化 Bootstrap Tooltip（DataTables 重繪後要重新初始化）
+				$('[data-bs-toggle="tooltip"]', nRow).tooltip();
+
 				//倉庫別
 				var warehouse = "";
 				if (aData[3] != null && aData[3] != "")
 					warehouse = aData[3];
 
-				$('td:eq(3)', nRow).html( '<div class="d-flex justify-content-center align-items-center size14 text-center" style="height:auto;min-height:32px;">'+warehouse+'</div>' );
+				$('td:eq(4)', nRow).html( '<div class="d-flex justify-content-center align-items-center size14 text-center" style="height:auto;min-height:32px;">'+warehouse+'</div>' );
 
 				//入庫數量
 				var purchase_qty = "";
 				if (aData[4] != null && aData[4] != "" && aData[4] != 0)
 					purchase_qty = number_format(aData[4]);
 
-				$('td:eq(4)', nRow).html( '<div class="d-flex justify-content-center align-items-center size14 text-center" style="height:auto;min-height:32px;">'+purchase_qty+'</div>' );
+				$('td:eq(5)', nRow).html( '<div class="d-flex justify-content-center align-items-center size14 text-center" style="height:auto;min-height:32px;">'+purchase_qty+'</div>' );
 
 				//單價
 				var unit_price = "";
 				if (aData[5] != null && aData[5] != "" && aData[5] != 0)
 					unit_price = number_format(aData[5]);
 
-				$('td:eq(5)', nRow).html( '<div class="d-flex justify-content-center align-items-center size14 text-center text-nowrap" style="height:auto;min-height:32px;">'+unit_price+'</div>' );
+				$('td:eq(6)', nRow).html( '<div class="d-flex justify-content-center align-items-center size14 text-center text-nowrap" style="height:auto;min-height:32px;">'+unit_price+'</div>' );
 
 				//備註
 				var remarks = "";
 				if (aData[7] != null && aData[7] != "")
 					remarks = aData[7];
 
-				$('td:eq(6)', nRow).html( '<div class="d-flex justify-content-start align-items-center size14 text-start" style="height:auto;min-height:32px;">'+remarks+'</div>' );
+				$('td:eq(7)', nRow).html( '<div class="d-flex justify-content-start align-items-center size14 text-start" style="height:auto;min-height:32px;">'+remarks+'</div>' );
 				
 				var show_btn = '';
 				
-				var url1 = "openfancybox_edit('/index.php?ch=purchaseorder_detail_modify&auto_seq="+aData[8]+"&fm=$fm',800,'96%','');";
+				var url1 = "openfancybox_edit('/index.php?ch=purchaseorder_detail_modify&auto_seq="+aData[8]+"&contract_id=$contract_id&fm=$fm',800,'96%','');";
 
 				var mdel = "purchaseorder_detail_myDel('"+aData[8]+"');";
 			
@@ -168,7 +186,7 @@ $list_view
 							+'</div>';
 				}
 				
-				$('td:eq(7)', nRow).html( '<div class="text-center">'+show_btn+'</div>' );
+				$('td:eq(8)', nRow).html( '<div class="text-center">'+show_btn+'</div>' );
 
 				return nRow;
 			}

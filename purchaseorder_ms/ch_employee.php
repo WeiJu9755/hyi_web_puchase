@@ -48,7 +48,7 @@ function getchoice($employee_id){
 
 	$objResponse->script('xajax.config.baseDocument = parent.document;');
 	$objResponse->assign("handler_id","value",$employee_id);
-	$objResponse->assign("makeby","value",$employee_name);
+	$objResponse->assign("employee_name","value",$employee_name);
 	$objResponse->script('xajax.config.baseDocument = document;');
 
 

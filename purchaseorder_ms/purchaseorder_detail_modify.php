@@ -106,6 +106,7 @@ if ($total > 0) {
 	$purchase_order_id = $row['purchase_order_id'];
 	$material_no = $row['material_no'];
 	$material_name = $row['material_name'];
+	$specification = $row['specification'];
 	$seq = $row['seq'];
 	$work_project = $row['work_project'];
 	$specification = $row['specification'];
@@ -219,7 +220,7 @@ $style_css
 					<div>
 						<div class="field_div1"></div> 
 						<div class="field_div2">
-							<div id="material_info">$material_name</div>
+							<div id="material_info">$material_name $specification</div>
 						</div> 
 					</div>
 					<div>

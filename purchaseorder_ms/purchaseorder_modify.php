@@ -555,6 +555,7 @@ $show_fellow_btn=<<<EOT
 <div class="btn-group" role="group">
 	<button $disabled type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="CheckValue(this.form);openfancybox_edit('/index.php?ch=purchaseorder_detail_add&contract_id=$purchase_contract_id&supplier_id=$supplier_id&auto_seq=$auto_seq&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
 	<button id="refreshBtn" type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="purchaseorder_detail_myDraw();"><i id="refreshIcon" class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
+	<a type="button" class="btn btn-warning" href="/index.php?ch=purchaseorder_exportexcel&purchase_order_id=$purchase_order_id&fm=$fm"><i class="bi bi-filetype-xls"></i>&nbsp;匯出Excel</a>
 </div>
 EOT; 
 }else if ($status == "已結單") {

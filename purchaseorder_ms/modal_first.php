@@ -76,14 +76,13 @@ if (isset($_GET['sid']))
 			$smarty->assign('show_center',$show_center);
 			$smarty->assign('xajax_javascript', $xajax->getJavascript('/xajax/'));
 			break;
-		case 'stock_in':
-			$title = "入庫作業";
-			$sid = "view01";
-			$modal = $m_location."/sub_modal/project/func04/stock_in_ms/stock_in.php";
-			include $modal;
-			$smarty->assign('show_center',$show_center);
-			$smarty->assign('xajax_javascript', $xajax->getJavascript('/xajax/'));
-			break;
+		case 'purchaseorder_exportexcel':
+				$title = "匯出Excel";
+				$sid = "view01";
+				$modal = $m_location."/sub_modal/project/func09/purchaseorder_ms/purchaseorder_exportexcel.php";
+				include $modal;
+				$smarty->assign('show_center',$show_center);
+				break;
 		default:
 			if (empty($sid))
 				$sid = "mbpjitem";

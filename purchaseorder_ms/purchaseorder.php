@@ -254,7 +254,7 @@ EOT;
 	$show_modify_btn = <<<EOT
 <div class="text-center my-2">
 	<div class="btn-group me-2 mb-2" role="group">
-		<button type="button" class="btn btn-danger text-nowrap" onclick="openfancybox_edit('/index.php?ch=add&t=$t&fm=$fm',1200,'90%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增採購單</button>
+		<button type="button" class="btn btn-danger text-nowrap" onclick="openfancybox_edit('/index.php?ch=add&t=$t&fm=$fm',1600,'100%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增採購單</button>
 		<button type="button" class="btn btn-success text-nowrap" onclick="myDraw();"><i class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
 	</div>
 </div>

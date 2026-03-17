@@ -94,6 +94,16 @@ function processform($aFormValues){
 			return $objResponse;
 			exit;
 		}
+
+		//檢查物料編碼是否存在
+		$Qry="SELECT material_no FROM inventory WHERE material_no = '$material_no'";
+		$mDB->query($Qry);
+		$total = $mDB->rowCount();
+		if (!$total) {
+			$mDB->remove();
+			$objResponse->script("jAlert('警示', '您輸入的物料編碼不存在，請重新輸入新的', 'red', '', 2000);");
+			return $objResponse;
+		}
 	  
 		$Qry="insert into purchaseorder_detail (purchase_order_id,seq,work_project,material_no,warehouse,purchase_qty,unit_price,remarks,last_modify) values ('$purchase_order_id','$seq','$work_project','$material_no','$warehouse','$purchase_qty','$unit_price','$remarks',now())";
 		$mDB->query($Qry);
@@ -131,7 +141,7 @@ $mDB = "";
 $mDB = new MywebDB();
 
 //載入所有料件編號
-$Qry="select material_no,material_name from inventory order by material_no";
+$Qry="select material_no,material_name,specification from inventory order by material_no";
 $mDB->query($Qry);
 $material_no_list = "";
 
@@ -139,7 +149,8 @@ if ($mDB->rowCount() > 0) {
 	while ($row=$mDB->fetchRow(2)) {
 		$ch_material_no = $row['material_no'];
 		$ch_material_name = $row['material_name'];
-		$material_no_list .= "<option value=\"$ch_material_no\">$ch_material_no $ch_material_name</option>";
+		$ch_specification = $row['specification'];
+		$material_no_list .= "<option value=\"$ch_material_no\">$ch_material_no $ch_material_name $ch_specification</option>";
 	}
 }
 
@@ -350,21 +361,7 @@ $('#material_no').on('input', function() {
 			data: { site_db : '$site_db', material_no: material_no },
 			dataType: 'json',
 			success: function (response) {
-				if (response.success) {
-					$('#material_info').text(response.material_name+' '+response.specification);
-
-					var warehouse_select = $('#warehouse');
-      				warehouse_select.empty(); // 清空原本的選單
-
-					var warehouse_list = response.warehouse_list;
-					
-					$.each(response.warehouse_list, function(index, warehouse) {
-        				warehouse_select.append($('<option></option>').val(warehouse).text(warehouse));
-      				});
-
-				} else {
-					$('#material_info').text('');
-				}
+				
 
 			},
 			error: function () {

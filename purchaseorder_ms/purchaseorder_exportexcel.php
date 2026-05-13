@@ -87,12 +87,12 @@ $mDB = "";
 $mDB = new MywebDB();
 
 $objPHPExcel = new PHPExcel();
-$objPHPExcel->getDefaultStyle()->getFont()->setName('DFKai-SB')->setSize(12);
+$objPHPExcel->getDefaultStyle()->getFont()->setName('DFKai-SB')->setSize(16);
 
 // ==============================
 // 1. 先查主檔資料
 // ==============================
-$Qry="SELECT a.*,b.contract_abbreviation,c.short_name,d.supplier_name 
+$Qry="SELECT a.*,b.contract_caption,c.short_name,d.supplier_name 
 FROM purchaseorder a
 LEFT JOIN contract b ON b.contract_id = a.contract_id
 LEFT JOIN company c ON c.company_id = b.company_id
@@ -111,7 +111,7 @@ if ($mDB->rowCount() > 0) {
             'delivery_date'           => $row['delivery_date'],
             'status'                  => $row['status'],
             'created_at'              => $row['created_at'],
-            'contract_abbreviation'   => $row['contract_abbreviation'],
+            'contract_caption'         => $row['contract_caption'],
             'short_name'              => $row['short_name'],
             'supplier_name'           => $row['supplier_name']
         ];
@@ -189,7 +189,7 @@ function buildPurchaseOrderSheet($sheet, $headerData, $pageRows, $pageNo = 1, $t
     $contract_id              = $headerData['contract_id'];
     $requirement_description  = $headerData['requirement_description'];
     $created_at               = $headerData['created_at'];
-    $contract_abbreviation    = $headerData['contract_abbreviation'];
+    $contract_caption    = $headerData['contract_caption'];
     $short_name               = $headerData['short_name'];
 
     // ==============================
@@ -217,9 +217,9 @@ function buildPurchaseOrderSheet($sheet, $headerData, $pageRows, $pageNo = 1, $t
     $sheet->getColumnDimension('E')->setWidth(7);
     $sheet->getColumnDimension('F')->setWidth(12);
     $sheet->getColumnDimension('G')->setWidth(5);
-    $sheet->getColumnDimension('H')->setWidth(10);
-    $sheet->getColumnDimension('I')->setWidth(10);
-    $sheet->getColumnDimension('J')->setWidth(25);
+    $sheet->getColumnDimension('H')->setWidth(5);
+    $sheet->getColumnDimension('I')->setWidth(5);
+    $sheet->getColumnDimension('J')->setWidth(10);
     $sheet->getColumnDimension('K')->setWidth(12);
     $sheet->getColumnDimension('L')->setWidth(12);
     $sheet->getColumnDimension('M')->setWidth(12);
@@ -267,14 +267,14 @@ function buildPurchaseOrderSheet($sheet, $headerData, $pageRows, $pageNo = 1, $t
     $sheet->getStyle('B3')->applyFromArray([
         'font'=>[
             'bold'=>true,
-            'size'=>20
+            'size'=>24
         ],
         'alignment'=>[
             'horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
             'vertical'=>PHPExcel_Style_Alignment::VERTICAL_CENTER
         ]
     ]);
-    $sheet->getStyle('B3')->getFont()->setBold(true)->setSize(24);
+    $sheet->getStyle('B3')->getFont()->setBold(true)->setSize(28);
 
     // ==============================
     // 注意事項
@@ -296,7 +296,7 @@ function buildPurchaseOrderSheet($sheet, $headerData, $pageRows, $pageNo = 1, $t
             'color'=>['rgb'=>'F2F2F2']
         ],
         'font'=>[
-            'size'=>14
+            'size'=>18
         ],
         'alignment'=>[
             'vertical'=>PHPExcel_Style_Alignment::VERTICAL_CENTER
@@ -376,7 +376,7 @@ function buildPurchaseOrderSheet($sheet, $headerData, $pageRows, $pageNo = 1, $t
     $sheet->setCellValue('A14','合約案別');
     $sheet->mergeCells('A14:B14');
     $sheet->mergeCells('C14:J14');
-    $sheet->setCellValue('C14',$contract_abbreviation);
+    $sheet->setCellValue('C14',$contract_caption);
     $sheet->setCellValue('K14','施作人員');
     $sheet->mergeCells('L14:O14');
     $sheet->setCellValue('L14','');
@@ -384,7 +384,7 @@ function buildPurchaseOrderSheet($sheet, $headerData, $pageRows, $pageNo = 1, $t
     $sheet->getStyle('A9:O14')->applyFromArray([
         'font'=>[
             'bold'=>true,
-            'size'=>14
+            'size'=>20
         ],
         'alignment'=>[
             'horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
@@ -407,7 +407,7 @@ function buildPurchaseOrderSheet($sheet, $headerData, $pageRows, $pageNo = 1, $t
         ],
         'font'=>[
             'bold'=>true,
-            'size'=>17
+            'size'=>20
         ],
         'alignment'=>[
             'horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
@@ -495,11 +495,11 @@ function buildPurchaseOrderSheet($sheet, $headerData, $pageRows, $pageNo = 1, $t
         $sheet->setCellValue("M{$rowIndex}", $contract_seq_unit_price);
         $sheet->getStyle("M{$rowIndex}")->getNumberFormat()->setFormatCode('#,##0');
 
-        $sheet->getRowDimension($rowIndex)->setRowHeight(55);
+        $sheet->getRowDimension($rowIndex)->setRowHeight(70);
 
         $sheet->getStyle("A{$rowIndex}:O{$rowIndex}")->applyFromArray([
             'font'=>[
-                'size'=>16
+                'size'=>20
             ],
             'alignment'=>[
                 'horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
@@ -656,7 +656,7 @@ function set_style_border_only_outline($sheet, $cell, $cell2 = "")
             'vertical'   => PHPExcel_Style_Alignment::VERTICAL_CENTER,
         ],
         'font' => [
-            'size' => 10,
+            'size' => 20,
         ],
     ]);
 }

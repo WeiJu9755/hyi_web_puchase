@@ -160,9 +160,9 @@ $list_view
 				//單價
 				var unit_price = "";
 				if (aData[5] != null && aData[5] != "" && aData[5] != 0)
-					unit_price = number_format(aData[5]);
+					unit_price = number_format(aData[5], 4);
 
-				$('td:eq(6)', nRow).html( '<div class="d-flex justify-content-center align-items-center size14 text-center text-nowrap" style="height:auto;min-height:32px;">'+unit_price+'</div>' );
+				$('td:eq(6)', nRow).html('<div class="d-flex justify-content-center align-items-center size14 text-center text-nowrap" style="height:auto;min-height:32px;">'+ unit_price +'</div>');
 
 				//備註
 				var remarks = "";
@@ -187,6 +187,10 @@ $list_view
 				}
 				
 				$('td:eq(8)', nRow).html( '<div class="text-center">'+show_btn+'</div>' );
+
+				if ('$status' == '已結單') {
+										$(nRow).css('background-color', '#e9ecef');
+										}
 
 				return nRow;
 			}

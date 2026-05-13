@@ -74,6 +74,8 @@ function processform($aFormValues){
 	$requirement_description 	= trim($aFormValues['requirement_description']);
 	$order_date 				= trim($aFormValues['order_date']);
 	$delivery_date 				= trim($aFormValues['delivery_date']);
+	$invoice_no 				= trim($aFormValues['invoice_no']);
+	
 	$supplier_id 				= trim($aFormValues['supplier_id']);
 	$location 					= trim($aFormValues['location']);
 	$purchase_order_id 			= "";
@@ -127,6 +129,7 @@ function processform($aFormValues){
     `requirement_description`,
     `order_date`,
     `delivery_date`,
+	`invoice_no`,
     `supplier_id`,
     `location`,
     `created_at`,
@@ -142,6 +145,7 @@ function processform($aFormValues){
     '$requirement_description',
     '$order_date',
     '$delivery_date',
+	'$invoice_no',
     '$supplier_id',
     '$location',
     '$now',
@@ -404,26 +408,32 @@ $style_css
 							</div> 
 						</div>
 								<div class="row" id="delivery_date_section">
-								<div class="col-lg-6 col-sm-12 col-md-12">
-									<div class="field_div1">到貨日期:</div> 
-									<div class="field_div3">
-									<div class="input-group" id="delivery_date" style="width:100%;max-width:250px;">
-										<input type="text" class="form-control" name="delivery_date" placeholder="請輸入入庫日期" aria-describedby="delivery_date" >
-										<button class="btn btn-outline-secondary input-group-append input-group-addon" type="button" data-target="#delivery_date" data-toggle="datetimepicker">
-										<i class="bi bi-calendar"></i>
-										</button>
-									</div>
-									<script type="text/javascript">
-										$(function () {
-										$('#delivery_date').datetimepicker({
-											locale: 'zh-tw',
-											format: "YYYY-MM-DD",
-											allowInputToggle: true
-										});
-										});
-									</script>
+									<div class="col-lg-6 col-sm-12 col-md-12">
+										<div class="field_div1">到貨日期:</div> 
+										<div class="field_div3">
+										<div class="input-group" id="delivery_date" style="width:100%;max-width:250px;">
+											<input type="text" class="form-control" name="delivery_date" placeholder="請輸入入庫日期" aria-describedby="delivery_date" >
+											<button class="btn btn-outline-secondary input-group-append input-group-addon" type="button" data-target="#delivery_date" data-toggle="datetimepicker">
+											<i class="bi bi-calendar"></i>
+											</button>
+										</div>
+										<script type="text/javascript">
+											$(function () {
+											$('#delivery_date').datetimepicker({
+												locale: 'zh-tw',
+												format: "YYYY-MM-DD",
+												allowInputToggle: true
+											});
+											});
+										</script>
+
+										</div> 
 									</div> 
-								</div> 
+									<div class="col-lg-6 col-sm-12 col-md-12">
+										<div class="field_div1">發票號碼:</div>
+										<div class="field_div3">
+											<input type="text" class="inputtext" name="invoice_no" id="invoice_no" size="50" placeholder="請輸入發票號碼" maxlength="50" style="width:100%;max-width:250px;" />
+										</div> 
 								</div>
 					</div>
 				</div>

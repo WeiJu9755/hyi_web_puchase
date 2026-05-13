@@ -284,6 +284,7 @@ EOT;
 			<tr style="border-bottom: 1px solid #000;">
 
 				<th scope="col" class="text-center" style="width:7%;">採購單號</th>
+				<th scope="col" class="text-center" style="width:7%;">發票號碼</th>
 				<th scope="col" class="text-center" style="width:7%;">採購性質</th>
 				<th scope="col" class="text-center" style="width:25%;">需求說明</th>
 				<th scope="col" class="text-center" style="width:7%;">訂購日期</th>
@@ -313,6 +314,12 @@ EOT;
 #db_table {
 	width: 100% !Important;
 	margin: 5px 0 0 0 !Important;
+}
+
+#db_table tbody tr.row-closed td,
+.DTFC_Cloned tbody tr.row-closed td {
+    background-color: #f2f2f2 !important;
+    color: #999 !important;
 }
 
 </style>
@@ -351,29 +358,35 @@ $list_view
 				}
 				$('td:eq(0)', nRow).html('<div class="size14 weight blue02 text-center">'+purchase_order_id+'</div>');
 
+				var invoice_no = "";
+				if (aData[7] != null && aData[7] != "") {
+					invoice_no = aData[7];
+				}
+				$('td:eq(1)', nRow).html('<div class="size14 weight blue02 text-center">'+invoice_no+'</div>');
+
 				var purchase_type = "";
 				if (aData[1] != null && aData[1] != "") {
 					purchase_type = aData[1];
 				}
-				$('td:eq(1)', nRow).html('<div class="size14 weight text-center">'+purchase_type+'</div>');
+				$('td:eq(2)', nRow).html('<div class="size14 weight text-center">'+purchase_type+'</div>');
 
 				var requirement_description = "";
 				if (aData[2] != null && aData[2] != "") {
 					requirement_description = aData[2];
 				}
-				$('td:eq(2)', nRow).html('<div class="size14 text-start">'+requirement_description+'</div>');
+				$('td:eq(3)', nRow).html('<div class="size14 text-start">'+requirement_description+'</div>');
 
 				var order_date = '';
 				if (aData[3] != null && aData[3] != "" ) {
 					order_date = aData[3];
 				}
-				$('td:eq(3)', nRow).html('<div class="size14 text-center">'+order_date+'</div>');
+				$('td:eq(4)', nRow).html('<div class="size14 text-center">'+order_date+'</div>');
 
 				var delivery_date = '';
 				if (aData[4] != null && aData[4] != "") {
 					delivery_date = aData[4];
 				}
-				$('td:eq(4)', nRow).html('<div class="size14 text-center">'+delivery_date+'</div>');
+				$('td:eq(5)', nRow).html('<div class="size14 text-center">'+delivery_date+'</div>');
 
 				var status = '';
 				if (aData[6] != null && aData[6] != "") {
@@ -387,23 +400,29 @@ $list_view
 				var files_total = '<div class="d-flex justify-content-center align-items-center size12 text-center mt-2" id="files_total'+aData[5]+'"></div>';
 				xajax_returnValue('$web_id','$project_id','$auth_id',aData[5],'purchaseorder');
 
-				$('td:eq(5)', nRow).html( '<a href="javascript:void(0);" onclick="'+url3+'" title="上傳檔案">'+files_total+'</a>' );
+				$('td:eq(6)', nRow).html( '<a href="javascript:void(0);" onclick="'+url3+'" title="上傳檔案">'+files_total+'</a>' );
 
 				var mdel = "myDel('" + aData[0] + "');";
-				if (status == '已結單') {
-					show_btn = '<div class="btn-group text-nowrap">'
-							+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+url1+'" title="編輯"><i class="bi bi-pencil-square"></i></button>'
-							+'<button type="button" class="btn btn-light" onclick="'+url3+'" title="上傳檔案"><i class="bi bi-file-arrow-up"></i></button>'
-							+'</div>';
-				} else {
-					show_btn = '<div class="btn-group text-nowrap">'
-							+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+url1+'" title="編輯"><i class="bi bi-pencil-square"></i></button>'
-							+'<button type="button" class="btn btn-light" onclick="'+url3+'" title="上傳檔案"><i class="bi bi-file-arrow-up"></i></button>'
-							+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+mdel+'" title="刪除"><i class="bi bi-trash"></i></button>'
-							+ '</div>';
-						}
-				
-				$('td:eq(6)', nRow).html('<div class="text-center">'+show_btn+'</div>');
+					var status_label = '';
+
+					if (status == '已結單') {
+						show_btn = '<div class="btn-group text-nowrap">'
+								+ '<button type="button" class="btn btn-light py-0 my-0 border" style="background:#fff;" onclick="'+url1+'" title="編輯"><i class="bi bi-pencil-square"></i></button>'
+								+ '<button type="button" class="btn btn-light border" style="background:#fff;" onclick="'+url3+'" title="上傳檔案"><i class="bi bi-file-arrow-up"></i></button>'
+								+ '</div>';
+
+						$(nRow).addClass('row-closed');
+						status_label = '<div class="text-danger weight size12 mt-1">已結單</div>';
+
+					} else {
+						show_btn = '<div class="btn-group text-nowrap">'
+								+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+url1+'" title="編輯"><i class="bi bi-pencil-square"></i></button>'
+								+ '<button type="button" class="btn btn-light" onclick="'+url3+'" title="上傳檔案"><i class="bi bi-file-arrow-up"></i></button>'
+								+ '<button type="button" class="btn btn-light py-0 my-0" onclick="'+mdel+'" title="刪除"><i class="bi bi-trash"></i></button>'
+								+ '</div>';
+					}
+
+					$('td:eq(7)', nRow).html('<div class="text-center">' + show_btn + status_label + '</div>');
 
 				return nRow;
 			}

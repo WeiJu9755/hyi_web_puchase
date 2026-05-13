@@ -4,6 +4,11 @@ session_start();
 
 $memberID = $_SESSION['memberID'];
 $powerkey = $_SESSION['powerkey'];
+$super_admin = "N";
+$super_advanced = "N";
+$mem_row = getkeyvalue2('memberinfo','member',"member_no = '$memberID'",'admin,advanced,checked,luck,admin_readonly,advanced_readonly');
+$super_admin = $mem_row['admin'];
+$super_advanced = $mem_row['advanced'];
 
 
 require_once '/website/os/Mobile-Detect-2.8.34/Mobile_Detect.php';
@@ -59,6 +64,7 @@ function SaveValue($aFormValues) {
                 handler_id = '{$aFormValues['handler_id']}',
                 requirement_description = '{$aFormValues['requirement_description']}',
                 delivery_date = '{$aFormValues['delivery_date']}',
+				invoice_no 	  = '{$aFormValues['invoice_no']}',
                 last_modify = NOW() ,
 				memeberID = '$memberID'
             WHERE purchase_order_id = '{$aFormValues['purchase_order_id']}'";
@@ -107,6 +113,7 @@ function execute_purchaseorder($purchase_order_id){
 		$row=$mDB->fetchRow(2);
 		$order_date = $row['order_date'];
 		$delivery_date = $row['delivery_date'];
+		$invoice_no = $row['invoice_no'];
 		$handler_id = $row['handler_id'];
 
 
@@ -417,6 +424,7 @@ $Qry = "SELECT
     a.status,
     b.employee_name,
     a.delivery_date,
+	a.invoice_no,
     a.stock_in_id,
     a.requirement_description,
     a.last_modify
@@ -443,6 +451,7 @@ if ($total > 0) {
 	$status = $row['status'];
 	$employee_name = $row['employee_name'];
 	$delivery_date = $row['delivery_date'];
+	$invoice_no = $row['invoice_no'];
 	$stock_in_id = $row['stock_in_id'];
 	$requirement_description = $row['requirement_description'];
 	$last_modify = $row['last_modify'];
@@ -532,20 +541,46 @@ include $m_location."/sub_modal/project/func09/purchaseorder_ms/purchaseorder_de
 $disabled = "";
 
 $show_fellow_btn2 = "";
-if ($status == "未結單") {
-$show_fellow_btn2=<<<EOT
-<div class="btn-group" role="group">
-	<button type="button" id="execute_purchase_btn" class="btn btn-success btn-sm text-nowrap px-3" onclick="CheckValue(this.form);execute_purchaseorder('$purchase_order_id');"><i class="bi bi-box-arrow-in-down"></i>&nbsp;結單作業，並新增入庫單</button>
-</div>
-EOT; 
-} else if ($status == "已結單") {
-$show_fellow_btn2=<<<EOT
-<div class="size14 weight">
-  <span style="color:blue;">入庫編號 : $stock_in_id</span>
-</div>
 
-EOT; 
-$disabled = "disabled";
+$disabled = "";
+$show_fellow_btn2 = "";
+
+// 已結單
+if ($status == "已結單") {
+
+    // 顯示入庫編號
+    $show_fellow_btn2 = <<<EOT
+    <div class="size14 weight">
+        <span style="color:blue;">入庫編號 : $stock_in_id</span>
+    </div>
+EOT;
+
+    if ($super_admin == "Y") {
+        // 👉 admin：只鎖「結單按鈕」
+        $execute_btn_disabled = "disabled";
+        $disabled = ""; // 其他欄位可編輯
+    } else {
+        // 👉 一般使用者：全部鎖
+        $execute_btn_disabled = "disabled";
+        $disabled = "disabled";
+    }
+
+} else if ($status == "未結單") {
+
+    // 未結單 → 正常操作
+    $execute_btn_disabled = "";
+    $disabled = "";
+
+    $show_fellow_btn2 = <<<EOT
+    <div class="btn-group" role="group">
+        <button type="button" id="execute_purchase_btn"
+        class="btn btn-success btn-sm text-nowrap px-3"
+        $execute_btn_disabled
+        onclick="CheckValue(this.form);execute_purchaseorder('$purchase_order_id');">
+        <i class="bi bi-box-arrow-in-down"></i>&nbsp;結單作業，並新增入庫單
+        </button>
+    </div>
+EOT;
 }
 
 
@@ -714,6 +749,12 @@ $style_css
 										</div> 
 									</div> 
 								</div>
+								<div class="col-lg-6 col-sm-12 col-md-12">
+								<div class="field_div1">發票號碼:</div>
+								<div class="field_div3">
+									<input type="text" class="inputtext" name="invoice_no" id="invoice_no" size="50" placeholder="請輸入發票號碼" maxlength="50" style="width:100%;max-width:250px;" value='$invoice_no' />
+								</div> 
+							</div> 
 
 							</div>
 							

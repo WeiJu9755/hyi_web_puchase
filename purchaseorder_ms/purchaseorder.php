@@ -271,7 +271,7 @@ EOT;
 				$member_logo
 			</div> 
 			<div class="col-lg-8 col-sm-12 col-md-12 p-1">
-				<div class="size20 pt-1 text-center">採購單管理</div>
+				<div class="size20 pt-1 text-center">材料機具採購管理</div>
 				$show_modify_btn
 				$show_disabled_warning
 			</div> 
@@ -284,6 +284,7 @@ EOT;
 			<tr style="border-bottom: 1px solid #000;">
 
 				<th scope="col" class="text-center" style="width:7%;">採購單號</th>
+				<th scope="col" class="text-center" style="width:7%;">合約簡稱</th>
 				<th scope="col" class="text-center" style="width:7%;">發票號碼</th>
 				<th scope="col" class="text-center" style="width:7%;">採購性質</th>
 				<th scope="col" class="text-center" style="width:25%;">需求說明</th>
@@ -358,35 +359,41 @@ $list_view
 				}
 				$('td:eq(0)', nRow).html('<div class="size14 weight blue02 text-center">'+purchase_order_id+'</div>');
 
+				var contract_abbreviation = "";
+				if (aData[8] != null && aData[8] != "") {
+					contract_abbreviation = aData[8];
+				}
+				$('td:eq(1)', nRow).html('<div class="size14 weight  text-center">'+contract_abbreviation+'</div>');
+
 				var invoice_no = "";
 				if (aData[7] != null && aData[7] != "") {
 					invoice_no = aData[7];
 				}
-				$('td:eq(1)', nRow).html('<div class="size14 weight blue02 text-center">'+invoice_no+'</div>');
+				$('td:eq(2)', nRow).html('<div class="size14 weight  text-center">'+invoice_no+'</div>');
 
 				var purchase_type = "";
 				if (aData[1] != null && aData[1] != "") {
 					purchase_type = aData[1];
 				}
-				$('td:eq(2)', nRow).html('<div class="size14 weight text-center">'+purchase_type+'</div>');
+				$('td:eq(3)', nRow).html('<div class="size14 weight text-center">'+purchase_type+'</div>');
 
 				var requirement_description = "";
 				if (aData[2] != null && aData[2] != "") {
 					requirement_description = aData[2];
 				}
-				$('td:eq(3)', nRow).html('<div class="size14 text-start">'+requirement_description+'</div>');
+				$('td:eq(4)', nRow).html('<div class="size14 text-start">'+requirement_description+'</div>');
 
 				var order_date = '';
 				if (aData[3] != null && aData[3] != "" ) {
 					order_date = aData[3];
 				}
-				$('td:eq(4)', nRow).html('<div class="size14 text-center">'+order_date+'</div>');
+				$('td:eq(5)', nRow).html('<div class="size14 text-center">'+order_date+'</div>');
 
 				var delivery_date = '';
 				if (aData[4] != null && aData[4] != "") {
 					delivery_date = aData[4];
 				}
-				$('td:eq(5)', nRow).html('<div class="size14 text-center">'+delivery_date+'</div>');
+				$('td:eq(6)', nRow).html('<div class="size14 text-center">'+delivery_date+'</div>');
 
 				var status = '';
 				if (aData[6] != null && aData[6] != "") {
@@ -400,7 +407,7 @@ $list_view
 				var files_total = '<div class="d-flex justify-content-center align-items-center size12 text-center mt-2" id="files_total'+aData[5]+'"></div>';
 				xajax_returnValue('$web_id','$project_id','$auth_id',aData[5],'purchaseorder');
 
-				$('td:eq(6)', nRow).html( '<a href="javascript:void(0);" onclick="'+url3+'" title="上傳檔案">'+files_total+'</a>' );
+				$('td:eq(7)', nRow).html( '<a href="javascript:void(0);" onclick="'+url3+'" title="上傳檔案">'+files_total+'</a>' );
 
 				var mdel = "myDel('" + aData[0] + "');";
 					var status_label = '';
@@ -422,7 +429,7 @@ $list_view
 								+ '</div>';
 					}
 
-					$('td:eq(7)', nRow).html('<div class="text-center">' + show_btn + status_label + '</div>');
+					$('td:eq(8)', nRow).html('<div class="text-center">' + show_btn + status_label + '</div>');
 
 				return nRow;
 			}

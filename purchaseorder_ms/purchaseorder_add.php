@@ -206,7 +206,10 @@ $mDB = new MywebDB();
 
 //載入合約
 
-$Qry="SELECT auto_seq,contract_id,contract_caption FROM contract ORDER BY auto_seq";
+$Qry="SELECT auto_seq, contract_id, contract_caption
+FROM contract
+WHERE closed != 'Y' OR closed IS NULL
+ORDER BY auto_seq";
 $mDB->query($Qry);
 $select_contract = "";
 $select_contract .= "<option></option>";
@@ -391,11 +394,11 @@ $style_css
 							<div class="col-lg-12 col-sm-12 col-md-12">
 								<div class="field_div1">供應商:</div> 
 								<div class="field_div2">
-									<input list="supplier_list" type="text" class="inputtext w-100" id="supplier_id" name="supplier_id" autocomplete="off" style="width:100%;max-width:250px;"/>
-							<datalist id="supplier_list">
-								$supplier_list
-							</datalist>
-							<div id="supplier_info"></div>
+									<input list="supplier_list" type="text" class="form-control" id="supplier_id" name="supplier_id" autocomplete="off" style="width:100%;max-width:250px;"/>
+									<div id="supplier_info" class="mt-1"></div>
+									<datalist id="supplier_list">
+										$supplier_list
+									</datalist>
 								</div> 
 							</div> 
 						</div>

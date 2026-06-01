@@ -30,7 +30,7 @@
 	 * you want to insert a non-database field (for example a counter or static image)
 	 */
 	
-	$aColumns = array( 'purchase_order_id','purchase_type','requirement_description','order_date','delivery_date','auto_seq','status','invoice_no');
+	$aColumns = array( 'a.purchase_order_id','a.purchase_type','a.requirement_description','a.order_date','a.delivery_date','a.auto_seq','a.status','a.invoice_no','b.contract_abbreviation');
 
 	/* Indexed column (used for fast and accurate table cardinality) */
 	$sIndexColumn = "purchase_order_id";
@@ -140,7 +140,8 @@
 	
 	$sQuery = "
 		SELECT SQL_CALC_FOUND_ROWS ".str_replace(" , ", " ", implode(", ", $aColumns))."
-		FROM   $sTable
+		FROM   $sTable a
+		LEFT JOIN contract b ON b.contract_id = a.contract_id
 		$sWhere
 		$sOrder
 		$sLimit
@@ -188,10 +189,14 @@
 			}
 			else if ( $aColumns[$i] != ' ' )
 			{
-				/* General output */
-				$row[] = $aRow[ $aColumns[$i] ];
+					/* General output */
+				//$row[] = $aRow[ $aColumns[$i] ];
 
-				
+				$field = $aColumns[$i];
+				$field = str_replace("a.","",$field);
+				$field = str_replace("b.","",$field);
+				$field = str_replace("c.","",$field);
+				$row[] = $aRow[$field];
 			}
 		}
 		$output['aaData'][] = $row;

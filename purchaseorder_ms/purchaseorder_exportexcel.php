@@ -258,7 +258,7 @@ function buildPurchaseOrderSheet($sheet, $headerData, $pageRows, $pageNo = 1, $t
     // 標題
     // ==============================
     $sheet->mergeCells('B3:N3');
-    $title = '請 購 / 採 購 / 驗收單';
+    $title = '材料機具採購單';
     if ($totalPages > 1) {
         $title .= "（第 {$pageNo} / {$totalPages} 頁）";
     }

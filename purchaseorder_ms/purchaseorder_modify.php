@@ -55,24 +55,51 @@ function processform($aFormValues){
 $xajax->registerFunction("SaveValue");
 function SaveValue($aFormValues) {
     $objResponse = new xajaxResponse();
-	$memberID = $_SESSION['memberID'];
-
-    $mDB = new MywebDB();
-    $Qry = "UPDATE purchaseorder SET
-                order_date = '{$aFormValues['order_date']}',
-                supplier_id = '{$aFormValues['supplier_id']}',
-                handler_id = '{$aFormValues['handler_id']}',
-                requirement_description = '{$aFormValues['requirement_description']}',
-                delivery_date = '{$aFormValues['delivery_date']}',
-				invoice_no 	  = '{$aFormValues['invoice_no']}',
-                last_modify = NOW() ,
-				memeberID = '$memberID'
-            WHERE purchase_order_id = '{$aFormValues['purchase_order_id']}'";
-    $mDB->query($Qry);
-    $mDB->remove();
+	savePurchaseorderValue($aFormValues);
 
    $objResponse->script("autoclose('提示', '存檔完成!', 500);");
     return $objResponse;
+}
+
+function savePurchaseorderValue($aFormValues) {
+	$memberID = $_SESSION['memberID'];
+	$purchase_order_id = trim($aFormValues['purchase_order_id']);
+
+	if ($purchase_order_id == "") {
+		return;
+	}
+
+	$fields = array(
+		"order_date",
+		"checkout_date",
+		"payment",
+		"supplier_id",
+		"handler_id",
+		"requirement_description",
+		"delivery_date",
+		"invoice_no"
+	);
+
+	$setValues = array();
+	foreach ($fields as $field) {
+		if (array_key_exists($field, $aFormValues)) {
+			$setValues[] = "$field = '{$aFormValues[$field]}'";
+		}
+	}
+
+	if (count($setValues) == 0) {
+		return;
+	}
+
+	$setValues[] = "last_modify = NOW()";
+	$setValues[] = "memeberID = '$memberID'";
+
+	$mDB = new MywebDB();
+	$Qry = "UPDATE purchaseorder SET
+				".implode(",\n				", $setValues)."
+			WHERE purchase_order_id = '$purchase_order_id'";
+	$mDB->query($Qry);
+	$mDB->remove();
 }
 
 $xajax->registerFunction("purchaseorder_detailDeleteRow");
@@ -97,9 +124,23 @@ function purchaseorder_detailDeleteRow($auto_seq){
 }
 
 $xajax->registerFunction("execute_purchaseorder");
-function execute_purchaseorder($purchase_order_id){
+function execute_purchaseorder($aFormValues){
 
 	$objResponse = new xajaxResponse();
+
+	if (is_array($aFormValues)) {
+		$purchase_order_id = trim($aFormValues['purchase_order_id']);
+
+		if (trim($aFormValues['order_date']) == "") {
+			$objResponse->script("jAlert('警示', '請輸入採購日期', 'red', '', 2000);");
+			return $objResponse;
+			exit;
+		}
+
+		savePurchaseorderValue($aFormValues);
+	} else {
+		$purchase_order_id = trim($aFormValues);
+	}
 	
 	$mDB = "";
 	$mDB = new MywebDB();
@@ -142,6 +183,7 @@ function execute_purchaseorder($purchase_order_id){
 			$material_no = $row['material_no'];
 			$warehouse = $row['warehouse'];
 			$purchase_qty = $row['purchase_qty'];
+			$unit_price = $row['unit_price'];
 			
 
 			if ($material_no == "") {
@@ -162,7 +204,7 @@ function execute_purchaseorder($purchase_order_id){
 				return $objResponse;
 				exit;
 			}
-			if ($purchase_qty <= 0) {
+			if ($unit_price <= 0) {
 				$mDB->remove();
 				$objResponse->script("jAlert('警示', '單價不可為0或負數', 'red', '', 2000);");
 				return $objResponse;
@@ -414,6 +456,8 @@ $mDB = new MywebDB();
 $Qry = "SELECT 
     a.purchase_order_id,
     a.order_date,
+	a.checkout_date,
+	a.payment,
     a.purchase_type,
     a.contract_id AS purchase_contract_id, 
     c.contract_id AS contract_table_id,
@@ -440,6 +484,8 @@ if ($total > 0) {
 	$row=$mDB->fetchRow(2);
 	$purchase_order_id = $row['purchase_order_id'];
 	$order_date = $row['order_date'];
+	$checkout_date = $row['checkout_date'];
+	$payment = $row['payment'];
 	$purchase_type = $row['purchase_type'];
 	$purchase_contract_id = $row['purchase_contract_id']; // 來自 purchaseorder
 	$_SESSION['contract_id'] = $purchase_contract_id;
@@ -459,15 +505,31 @@ if ($total > 0) {
 }
 
 //載入廠商
-$Qry="select supplier_id,supplier_name from supplier order by auto_seq";
+$Qry="SELECT supplier_id,supplier_name from supplier ORDER BY supplier_id";
 $mDB->query($Qry);
-$select_supplier = "";
-$select_supplier .= "<option></option>";
+$supplier_list = "";
+$supplier_name = "";
 if ($mDB->rowCount() > 0) {
 	while ($row=$mDB->fetchRow(2)) {
 		$ch_supplier_id = $row['supplier_id'];
 		$ch_supplier_name = $row['supplier_name'];
-		$select_supplier .= "<option value=\"$ch_supplier_id\" ".mySelect($ch_supplier_id,$supplier_id).">$ch_supplier_id $ch_supplier_name</option>";
+		$supplier_list .= "<option value=\"$ch_supplier_id\">$ch_supplier_id $ch_supplier_name</option>";
+		if ($ch_supplier_id == $supplier_id) {
+			$supplier_name = $ch_supplier_name;
+		}
+	}
+}
+
+// 載入付款方式
+$Qry="SELECT caption FROM items where pro_id ='payment' ORDER BY pro_id,orderby";
+$mDB->query($Qry);
+$select_payment = "";
+$select_payment .= "<option></option>";
+
+if ($mDB->rowCount() > 0) {
+	while ($row=$mDB->fetchRow(2)) {
+		$ch_payment = $row['caption'];
+		$select_payment .= "<option value=\"$ch_payment\" ".mySelect($ch_payment,$payment).">$ch_payment</option>";
 	}
 }
 
@@ -536,6 +598,7 @@ EOT;
 
 
 include $m_location."/sub_modal/project/func09/purchaseorder_ms/purchaseorder_detail.php";
+$ajax_get_supplier = $m_location."/sub_modal/project/func09/purchaseorder_ms/ajax_get_supplier.php";
 
 
 $disabled = "";
@@ -576,7 +639,7 @@ EOT;
         <button type="button" id="execute_purchase_btn"
         class="btn btn-success btn-sm text-nowrap px-3"
         $execute_btn_disabled
-        onclick="CheckValue(this.form);execute_purchaseorder('$purchase_order_id');">
+        onclick="execute_purchaseorder(xajax.getFormValues('modifyForm'));">
         <i class="bi bi-box-arrow-in-down"></i>&nbsp;結單作業，並新增入庫單
         </button>
     </div>
@@ -590,7 +653,7 @@ $show_fellow_btn=<<<EOT
 <div class="btn-group" role="group">
 	<button $disabled type="button" class="btn btn-danger btn-sm text-nowrap px-3" onclick="CheckValue(this.form);openfancybox_edit('/index.php?ch=purchaseorder_detail_add&contract_id=$purchase_contract_id&supplier_id=$supplier_id&auto_seq=$auto_seq&fm=$fm',800,'96%','');"><i class="bi bi-plus-circle"></i>&nbsp;新增料件</button>
 	<button id="refreshBtn" type="button" class="btn btn-success btn-sm text-nowrap px-3" onclick="purchaseorder_detail_myDraw();"><i id="refreshIcon" class="bi bi-arrow-repeat"></i>&nbsp;重整</button>
-	<a type="button" class="btn btn-warning" href="/index.php?ch=purchaseorder_exportexcel&purchase_order_id=$purchase_order_id&fm=$fm"><i class="bi bi-filetype-xls"></i>&nbsp;匯出Excel</a>
+	<a type="button" class="btn btn-warning" href="/index.php?ch=purchaseorder_exportexcel&purchase_order_id=$purchase_order_id&fm=$fm"><i class="bi bi-filetype-xls"></i>&nbsp;材料機具採購單匯出</a>
 </div>
 EOT; 
 }else if ($status == "已結單") {
@@ -692,11 +755,44 @@ $style_css
 					<div class="container-fluid">
 						<div class="row">
 							<div class="col-lg-6 col-sm-12 col-md-12">
+								<div class="field_div1">結帳日期:</div> 
+								<div class="field_div3">
+									<div class="input-group" id="checkout_date"  style="width:100%;max-width:250px;">
+										<input $disabled type="text" class="form-control" name="checkout_date" placeholder="請輸入結帳日期" aria-describedby="checkout_date" value="$checkout_date" onchange="setEdit();">
+										<button $disabled class="btn btn-outline-secondary input-group-append input-group-addon" type="button" data-target="#checkout_date" data-toggle="datetimepicker"><i class="bi bi-calendar"></i></button>
+									</div>
+									<script type="text/javascript">
+										$(function () {          
+											$('#checkout_date').datetimepicker({
+												locale: 'zh-tw'
+												,format:"YYYY-MM-DD"
+												,allowInputToggle: true
+											});
+										});
+									</script>
+								</div> 
+							</div> 
+							<div class="col-lg-6 col-sm-12 col-md-12">
+								<div class="field_div1">付款方式:</div> 
+								<div class="field_div3">
+									<select id="payment" name="payment" placeholder="請選擇付款方式" style="width:100%;max-width:250px;">
+									$select_payment
+									</select>
+								</div> 
+							</div> 
+						</div>
+					</div>
+					
+					<div class="container-fluid">
+						<div class="row">
+							<div class="col-lg-6 col-sm-12 col-md-12">
 								<div class="field_div1">供應商:</div> 
 								<div class="field_div3">
-									<select $disabled id="supplier_id" name="supplier_id" value="$supplier_id" style="width:100%;max-width:350px;" onchange="setEdit();">
-										$select_supplier
-									</select>
+									<input list="supplier_list" $disabled type="text" class="form-control" id="supplier_id" name="supplier_id" value="$supplier_id" autocomplete="off" style="width:100%;max-width:350px;" onchange="setEdit();"/>
+									<div id="supplier_info" class="mt-1">$supplier_name</div>
+									<datalist id="supplier_list">
+										$supplier_list
+									</datalist>
 								</div> 
 							</div> 
 						</div>
@@ -811,7 +907,7 @@ $(document).ready(function() {
 	});
 });
 
-var execute_purchaseorder = function(purchase_order_id){				
+var execute_purchaseorder = function(formValues){				
 
 	Swal.fire({
 	title: "您確定要執行結單作業嗎?",
@@ -824,7 +920,7 @@ var execute_purchaseorder = function(purchase_order_id){
 	confirmButtonText: "確認執行"
 	}).then((result) => {
 		if (result.isConfirmed) {
-			xajax_execute_purchaseorder(purchase_order_id);
+			xajax_execute_purchaseorder(formValues);
 		}
 	});
 
@@ -844,6 +940,31 @@ var purchaseorder_detail_myDraw = function(){
         document.getElementById('refreshIcon').classList.add('bi', 'bi-arrow-repeat');
     }, 500);
 }
+
+$('#supplier_id').on('input', function() {
+    var supplier_id = $(this).val();
+	if (supplier_id !== '') {
+		$.ajax({
+			url: '$ajax_get_supplier',
+			method: 'POST',
+			data: { site_db : '$site_db', supplier_id: supplier_id },
+			dataType: 'json',
+			success: function (response) {
+				if (response.success) {
+					$('#supplier_info').text(response.supplier_name);
+				} else {
+					$('#supplier_info').text('');
+				}
+			},
+			error: function () {
+		    	$('#supplier_info').text('');
+			}
+		});
+
+	} else {
+    	$('#supplier_info').text('');
+	}
+});
 
 
 
